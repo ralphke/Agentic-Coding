@@ -1,8 +1,7 @@
 {
   "name": "Agentic Coding Workshop",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
-  "workspaceFolder": "/workspaces/Agentic-Coding",
-  "workspaceMount": "source=d:\\repros\\Agentic-Coding,target=/workspaces/Agentic-Coding,type=bind,consistency=cached",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "features": {
     "ghcr.io/devcontainers/features/python:1": {
       "installTools": true,

@@ -69,6 +69,27 @@ All three paths use the same `.devcontainer/devcontainer.json` — you get ident
 
 When you run an Aspire application, the dashboard starts on port **18888**. VS Code automatically forwards this port and opens it in your browser. If it does not open automatically, navigate to `http://localhost:18888`.
 
+### Optional local-only host mount via `.env.local`
+
+Use this pattern if you want to mount an extra local host folder (for caches, datasets, or tooling) without breaking Codespaces.
+
+1. Copy `.devcontainer/.env.local.example` to `.devcontainer/.env.local`.
+2. Set `DEVCONTAINER_HOST_DATA_PATH` to a real host path on your machine.
+3. Run:
+
+   ```powershell
+   .\.devcontainer\load-localenv.ps1
+   ```
+
+4. Restart VS Code Insiders so it picks up updated user environment variables.
+5. Reopen the repository using **Dev Containers: Open Folder in Container...** and choose `.devcontainer/devcontainer.local.json`.
+
+Notes:
+
+- Default config `.devcontainer/devcontainer.json` remains portable for local + Codespaces.
+- Local override `.devcontainer/devcontainer.local.json` adds a mount at `/workspace-data` using `${localEnv:DEVCONTAINER_HOST_DATA_PATH}`.
+- If the environment variable is missing, local override startup will fail (expected behavior for explicit mount configs).
+
 ---
 
 ## Quick start: GitHub Codespaces
@@ -79,6 +100,8 @@ When you run an Aspire application, the dashboard starts on port **18888**. VS C
 4. Open a terminal and run the same verification commands above.
 
 > **Port forwarding in Codespaces:** The Aspire dashboard (18888) is forwarded automatically. Access it from the **Ports** tab in the VS Code web interface or the notification that appears in the terminal.
+>
+> **Mount behavior in Codespaces:** use the default `.devcontainer/devcontainer.json`. Do not use `.devcontainer/devcontainer.local.json` because it expects a local host path variable.
 
 ---
 

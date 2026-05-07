@@ -1,0 +1,7 @@
+{
+  "name": "Agentic Coding Workshop (Local Mounts)",
+  "extends": "./devcontainer.json",
+  "mounts": [
+    "source=${localEnv:DEVCONTAINER_HOST_DATA_PATH},target=/workspace-data,type=bind,consistency=cached"
+  ]
+}
