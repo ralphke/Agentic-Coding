@@ -1,0 +1,72 @@
+{
+  "name": "Agentic Coding Workshop",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.14",
+      "installTools": true
+    },
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "10.0",
+      "installDotnetRuntimeOnly": false
+    },
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "moby": false,
+      "installDockerBuildx": true
+    },
+    "ghcr.io/devcontainers/features/azure-cli:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:${containerEnv:HOME}/.local/bin"
+  },
+  "forwardPorts": [
+    18888,
+    5000,
+    5001,
+    8000,
+    1433
+  ],
+  "portsAttributes": {
+    "18888": {
+      "label": "Aspire Dashboard",
+      "onAutoForward": "openBrowser"
+    },
+    "5000": {
+      "label": "ASP.NET HTTP"
+    },
+    "5001": {
+      "label": "ASP.NET HTTPS"
+    },
+    "8000": {
+      "label": "Python dev server"
+    },
+    "1433": {
+      "label": "SQL Server / DAB target"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.pylance",
+        "ms-python.vscode-pylance",
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.csharp",
+        "ms-toolsai.jupyter",
+        "aspire.aspire",
+        "humao.rest-client",
+        "ms-azuretools.vscode-docker",
+        "github.copilot",
+        "github.copilot-chat"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python3.14",
+        "dotnet.defaultSolution": "disable",
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  "remoteUser": "vscode"
+}
