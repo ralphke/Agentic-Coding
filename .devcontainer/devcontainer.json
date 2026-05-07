@@ -1,25 +1,38 @@
 {
   "name": "Agentic Coding Workshop",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "workspaceFolder": "/workspaces/Agentic-Coding",
+  "workspaceMount": "source=d:\\repros\\Agentic-Coding,target=/workspaces/Agentic-Coding,type=bind,consistency=cached",
   "features": {
     "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.14",
-      "installTools": true
+      "installTools": true,
+      "optimize": true,
+      "version": "os-provided"
     },
     "ghcr.io/devcontainers/features/dotnet:2": {
-      "version": "10.0",
-      "installDotnetRuntimeOnly": false
+      "tabCompletions": true,
+      "version": "latest",
+      "additionalVersions": "8.0"
     },
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
-      "moby": false,
-      "installDockerBuildx": true
+      "installDockerBuildx": true,
+      "installDockerComposeSwitch": true,
+      "version": "latest",
+      "dockerDashComposeVersion": "latest"
     },
-    "ghcr.io/devcontainers/features/azure-cli:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "version": "latest",
+      "bicepVersion": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "installDirectlyFromGitHubRelease": true,
+      "version": "latest"
+    },
+    "ghcr.io/helpers4/devcontainer/github-dev:1": {}
   },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "remoteEnv": {
-    "PATH": "${containerEnv:PATH}:${containerEnv:HOME}/.local/bin"
+    "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin:/home/vscode/.dotnet/tools:/home/vscode/.aspire/bin"
   },
   "forwardPorts": [
     18888,
@@ -59,10 +72,11 @@
         "humao.rest-client",
         "ms-azuretools.vscode-docker",
         "github.copilot",
-        "github.copilot-chat"
+        "github.copilot-chat",
+        "GitHub.vscode-pull-request-github"
       ],
       "settings": {
-        "python.defaultInterpreterPath": "/usr/local/bin/python3.14",
+        "python.defaultInterpreterPath": "/usr/local/bin/python3.12",
         "dotnet.defaultSolution": "disable",
         "editor.formatOnSave": true
       }

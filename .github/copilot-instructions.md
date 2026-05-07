@@ -75,3 +75,92 @@ The primary IDE for all workshop participants is the **VS Code Agents applicatio
 - Record every workshop-building prompt in .github/prompts in operation order using zero-padded numeric prefixes.
 - Keep issue-to-Copilot automation centered on the copilot-task label and Copilot Task issue template.
 - If project tooling is added later, update this file with exact commands and repo-specific patterns.
+
+---
+
+## Software Fabric — Autonomous SDLC
+
+This repository implements a **spec-driven autonomous SDLC** using the [OpenSPEC](https://github.com/Fission-AI/OpenSpec) specification format. The goal: submit an idea, and the Software Fabric pipeline autonomously produces a tested, secure, deployable application.
+
+### Pipeline at a Glance
+
+```
+[Idea Issue] → [Proposal] → [Design+Tasks] → [Code] → [Tests]
+             → [Security] → [Review] → [Deploy] → [Operate+Archive]
+```
+
+Stages are tracked via PR labels: `stage:proposal` → `stage:design` → `stage:implement` → `stage:test` → `stage:security` → `stage:review` → `stage:deploy` → `stage:operate` → `archived`
+
+### Entry Points
+
+| Method | Command/Path |
+|--------|-------------|
+| Submit an idea | Open an issue using `.github/ISSUE_TEMPLATE/idea-capture.yml` |
+| Start pipeline in chat | Use `.github/prompts/sdlc-kickoff.prompt.md` |
+| Propose a change | `/opsx:propose <slug>` (prompt: `opsx-propose.prompt.md`) |
+| Implement a change | `/opsx:apply <slug>` (prompt: `opsx-apply.prompt.md`) |
+| Verify a change | `/opsx:verify <slug>` (prompt: `opsx-verify.prompt.md`) |
+
+### OpenSPEC Structure (`spec/openspec/`)
+
+- `config.yaml` — project config, domain ownership, quality gates, persona roster
+- `specs/<domain>/spec.md` — source-of-truth requirement specs (MUST/SHALL + Given/When/Then)
+- `changes/<slug>/` — in-flight work: `proposal.md`, `design.md`, `tasks.md`, `specs/<domain>/spec.md` (delta)
+- `changes/archive/` — completed, archived changes
+
+**Domains:** `sdlc-process`, `personas`, `idea-capture`, `security-standards`, `testing-standards`, `operations`
+
+**Delta spec format inside a change:**
+```markdown
+## ADDED Requirements
+## MODIFIED Requirements
+## REMOVED Requirements
+```
+
+### Agent Personas (`.github/agents/`)
+
+| File | Role | Trigger |
+|------|------|---------|
+| `product-owner.md` | Idea → `proposal.md` | `idea` label |
+| `architect.md` | Proposal → `design.md` + `tasks.md` | `stage:design` |
+| `developer.md` | Tasks → implementation | `stage:implement` |
+| `qa-engineer.md` | Code → test suites (≥80% coverage) | `stage:test` |
+| `security-engineer.md` | Code → security report (OWASP) | `stage:security` |
+| `code-reviewer.md` | Code → review (BLOCKING/SUGGESTION) | `stage:review` |
+| `devops-sre.md` | Merge → staged deploy + rollback | `stage:deploy` |
+| `operations-sre.md` | Deploy → SLOs + dashboards + archive | `stage:operate` |
+
+### Skills (`.github/skills/`)
+
+| File | Used By | Purpose |
+|------|---------|---------|
+| `idea-to-spec.md` | Product Owner | Transform raw idea to proposal.md |
+| `spec-to-design.md` | Architect | Proposal → design.md + tasks.md |
+| `test-generation.md` | QA Engineer | Spec scenarios → test suites |
+| `security-review.md` | Security Engineer | SAST + OWASP audit |
+| `pr-review.md` | Code Reviewer | Quality + design alignment review |
+| `deploy-pipeline.md` | DevOps SRE | Staged deploy with smoke tests |
+
+### Quality Gates
+
+All must pass before a change can be archived:
+- ✅ CI green (tests passing)
+- ✅ Test coverage ≥ 80%
+- ✅ No CRITICAL or HIGH security findings
+- ✅ ≥ 1 code review approval
+- ✅ All `tasks.md` items checked
+- ✅ All `proposal.md` acceptance criteria checked
+
+### MCP Servers (`.vscode/mcp.json`)
+
+| Server | Purpose |
+|--------|---------|
+| `openspec-filesystem` | Read/write `spec/openspec/` folder |
+| `github-mcp` | Create/label issues and PRs |
+
+**OpenSpec CLI install:** `npm install -g @fission-ai/openspec@latest`
+
+### Instruction Files
+
+- `.github/instructions/openspec-workflow.instructions.md` — applied to `spec/openspec/**`
+- `.github/instructions/sdlc-fabric.instructions.md` — applied globally (`**`)
