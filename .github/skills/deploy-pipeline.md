@@ -15,15 +15,17 @@ Use when a PR is approved and labelled `stage:deploy` by the Code Reviewer Agent
 ## Execution Steps
 
 1. **Validate pipeline config** — Check `.github/workflows/ci.yml` and orchestrator workflow
-2. **Build and scan image** — Build Docker image, run container vulnerability scan
-3. **Deploy to dev** — Deploy to dev environment, run smoke tests
-4. **Deploy to staging** — Deploy to staging, run full integration tests + perf baseline
-5. **Production gate** — Manual approval for P0/P1; auto-advance for P2/P3
-6. **Deploy to production** — Rolling deployment with health check validation
-7. **Post-deploy monitoring** — Monitor error rate for 10 minutes
-8. **Rollback if needed** — Auto-rollback if smoke tests fail or error rate spikes
-9. **Report** — Post deployment summary on the PR
-10. **Handoff** — Label issue `stage:operate`
+2. **Verify AI code provenance** — Confirm AI-assisted commits are tagged `[AI-assisted]`
+   and that the Security Agent's SCA/license scan passed before proceeding.
+3. **Build and scan image** — Build Docker image, run container vulnerability scan
+4. **Deploy to dev** — Deploy to dev environment, run smoke tests
+5. **Deploy to staging** — Deploy to staging, run full integration tests + perf baseline
+6. **Production gate** — Manual approval for P0/P1; auto-advance for P2/P3
+7. **Deploy to production** — Rolling deployment with health check validation
+8. **Post-deploy monitoring** — Monitor error rate for 10 minutes
+9. **Rollback if needed** — Auto-rollback if smoke tests fail or error rate spikes
+10. **Report** — Post deployment summary on the PR
+11. **Handoff** — Label issue `stage:operate`
 
 ---
 
@@ -110,6 +112,7 @@ kubectl rollout undo deployment/$DEPLOYMENT -n $NAMESPACE  # rollback
 ## Quality Checks
 
 - [ ] Image vulnerability scan completed (no CRITICAL CVEs)
+- [ ] AI code provenance verified — AI-assisted commits tagged, SCA/license scan passed
 - [ ] Smoke tests pass in dev and staging before production
 - [ ] Rolling deployment used (no downtime)
 - [ ] Health checks validated at each stage

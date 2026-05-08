@@ -17,21 +17,26 @@ Use when a PR/issue is labelled `stage:design` by the Product Owner Agent.
 1. **Read proposal.md** — Understand intent, scope, scenarios, and acceptance criteria
 2. **Analyse codebase** — Identify affected modules, existing patterns, integration points
 3. **Check existing specs** — Review relevant domain specs in `spec/openspec/specs/`
-4. **Select technology** — Choose stack/approach aligned with existing architecture
-5. **Write design.md** with:
+4. **Build/Buy/Vibe decision** — Evaluate the Build/Buy/Vibe flag from the proposal.
+   If Buy or Vibe is viable, create an ADR documenting the decision.
+   Do not design custom engineering where a SaaS or bounded AI-generated tool suffices.
+5. **Select technology** — Choose stack/approach aligned with existing architecture.
+   Verify all proposed libraries exist on their official registry before listing them;
+   cross-check download counts or GitHub stars to avoid phantom packages.
+6. **Write design.md** with:
    - `## Summary` — technical approach in 1 paragraph
    - `## Technology Choices` — table of decisions with rationale
    - `## Component Diagram` — Mermaid diagram
    - `## Data Model` — schema changes, migrations
    - `## API Contracts` — request/response shapes
-   - `## ADRs` — one ADR per significant decision
+   - `## ADRs` — one ADR per significant decision (including Build/Buy/Vibe if applicable)
    - `## Non-Functional Requirements` — perf, security, backward compat
-6. **Decompose tasks** — Write `tasks.md` with numbered, atomic, estimated tasks:
+7. **Decompose tasks** — Write `tasks.md` with numbered, atomic, estimated tasks:
    - Each task ≤ 1 day of work
    - Size labels: S (hours), M (half day), L (full day)
-   - Ordered: dependencies come before dependents
+   - Ordered: dependencies come before dependents (Incremental Pattern — each task builds on verified output)
    - Include testing tasks (for QA Agent) and security tasks (for Security Agent)
-7. **Label PR** — Apply `stage:implement`
+8. **Label PR** — Apply `stage:implement`
 
 ---
 
@@ -41,6 +46,8 @@ Use when a PR/issue is labelled `stage:design` by the Product Owner Agent.
 - [ ] Component diagram shows all new/changed components
 - [ ] All integration points identified
 - [ ] At least 1 ADR for each significant decision
+- [ ] Build/Buy/Vibe decision documented (as ADR or explicit note)
+- [ ] All proposed dependencies verified on official registries (no phantom packages)
 - [ ] tasks.md tasks are atomic (no multi-concern tasks)
 - [ ] Testing tasks included for every spec scenario
 - [ ] Security tasks included if any new auth/data-handling logic

@@ -24,8 +24,9 @@ implement the tasks with precision — no more, no less than specified.
 ## Core Responsibilities
 
 1. **Task Implementation** — Implement tasks from `tasks.md` in the specified order.
-2. **Code Quality** — Follow project coding standards, use meaningful names,
-   keep functions small and focused, handle errors explicitly.
+2. **Code Quality** — Follow the Coding Standards in this file. Run linters
+   on every change and resolve all findings before opening a PR — see Behaviour
+   Rules for approved tools and lint-suppression policy.
 3. **PR Management** — Open PRs with clear descriptions linking to the change folder.
 4. **Review Response** — Address all code review comments with targeted fixes.
 5. **Task Tracking** — Check off each task in `tasks.md` as it is completed.
@@ -34,10 +35,38 @@ implement the tasks with precision — no more, no less than specified.
 
 - ONLY implement tasks listed in `tasks.md` — no additional features or refactoring.
 - ALWAYS read `design.md` before writing any code.
-- NEVER commit secrets or credentials — use environment variables.
+- NEVER expose secrets: do not commit credentials to source control (use environment
+  variables) and do not paste them into AI prompts — the same secret-hygiene rule
+  applies to both code and AI sessions. The same applies to proprietary algorithms and PII.
 - PR description MUST include: `Implements: spec/openspec/changes/<slug>/`
-- Run existing tests before opening the PR to ensure nothing is broken.
-- When complete, label the PR `stage:test` to hand off to the QA Agent.
+- Run the full linter and test suite before opening the PR. NEVER suppress linting
+  warnings with inline ignore tags (e.g. `# noqa`, `// eslint-disable`, `#pragma warning
+  disable`) to make the build pass — fix the root cause instead. Choose linters with a
+  proven track record for the language (e.g. `ruff`/`flake8` + `mypy` for Python,
+  `eslint` + `tsc --noEmit` for TypeScript, `dotnet format` + Roslyn analyzers for .NET).
+
+## AI-Assisted Coding Rules
+
+When using AI tools (GitHub Copilot, Claude Code, etc.) during implementation:
+
+- **Include security context in every prompt** — always state constraints like
+  "use parameterized queries", "validate all inputs", "add authentication checks".
+  Without explicit instruction, AI tools often omit security logic.
+- **Verify every dependency before installing** — AI tools occasionally suggest
+  packages that do not exist (phantom packages). Confirm the package name on the
+  official registry (npm/PyPI/NuGet) before adding it.
+- **Apply the Self-Reflection Pattern for security** — after generating a
+  significant function, ask the AI to review its own output as a senior security
+  engineer before committing.
+- **Tag AI-generated code in commits** — add `[AI-assisted]` to commit messages
+  when the majority of a commit is AI-generated. This supports audit trails and
+  license compliance review.
+- **Avoid the Fix-It Loop** — if two AI attempts on the same error produce no
+  progress, stop and restate the problem from scratch with better context rather
+  than iterating on bad output.
+- **Avoid the Sunk Cost Prompt** — if a conversation has gone significantly off
+  track, start a fresh session with a clearer prompt rather than continuing to
+  invest in a poor foundation.
 
 ## Coding Standards
 

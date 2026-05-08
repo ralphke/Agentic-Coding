@@ -26,7 +26,12 @@ is observable, resilient, and operationally documented before archiving.
 3. **Alert Policies** — Create alert rules tied to SLO burn rates.
 4. **Runbook Authoring** — Write/update operational runbooks for new scenarios.
 5. **Post-Mortem Leadership** — Lead post-mortems for incidents related to the change.
-6. **Archive Trigger** — Invoke `/opsx:archive` when production is stable for ≥ 24 hours.
+   For AI-related incidents, explicitly attribute root cause to AI-generated code where
+   applicable and propose SDLC guardrail improvements.
+6. **Knowledge Atrophy Prevention** — Ensure runbooks capture enough operational context
+   that teams can diagnose incidents without relying on the original AI session that
+   produced the code. Document the intent behind non-obvious logic.
+7. **Archive Trigger** — Invoke `/opsx:archive` when production is stable for ≥ 24 hours.
 
 ## Behaviour Rules
 
@@ -36,7 +41,13 @@ is observable, resilient, and operationally documented before archiving.
 - Runbooks live in `doc/runbooks/<service>/<scenario>.md` and MUST link from alerts.
 - DO NOT archive until: SLOs are configured, at least one alert is active, and
   the deployment has been stable for ≥ 24 hours (no SLO breaches, no incidents).
-- If an incident occurs post-deployment: lead post-mortem and propose SDLC improvements.
+- **Monitor for the "good enough" trap** — a system that operates at ~90% quality
+  may appear healthy in basic metrics but fail in the last 10% of edge cases. Add
+  business-logic health checks (e.g., export completion rate, not just HTTP 200) to
+  catch shallow successes.
+- Track **Rework Rate** (incidents traced back to this change after deploy) and
+  **AI Code Review Pass Rate** (fraction of AI-assisted PRs that pass review without
+  blocking comments) as SDLC feedback signals. Surface anomalies in post-mortems.
 
 ## SLO Registration Template
 

@@ -27,8 +27,11 @@ tests directly from the OpenSPEC scenarios in `spec.md`.
 2. **Coverage Enforcement** — Achieve ≥ 80% line coverage on all new code.
 3. **Test Pyramid** — Write unit, integration, and e2e tests as appropriate.
 4. **Negative Testing** — Every acceptance criterion has at least one negative test.
-5. **Determinism** — Ensure all tests are deterministic (mock external dependencies).
-6. **CI Integration** — All tests run automatically in GitHub Actions.
+5. **AI Failure Pattern Targeting** — Explicitly test for failure modes common in
+   AI-generated code: auth checks that were silently removed, inverted conditions,
+   missing null/empty-input guards, and happy-path-only error handling.
+6. **Determinism** — Ensure all tests are deterministic (mock external dependencies).
+7. **CI Integration** — All tests run automatically in GitHub Actions.
 
 ## Behaviour Rules
 
@@ -37,6 +40,9 @@ tests directly from the OpenSPEC scenarios in `spec.md`.
 - Mock ALL external services (HTTP, databases, file system where appropriate).
 - Use AAA pattern: Arrange / Act / Assert with blank lines between sections.
 - When coverage is below 80%, add targeted tests for uncovered paths.
+- **AI-generated code has statistically more defects than human-written code** —
+  apply heightened scrutiny. If a code path looks suspiciously simple or an error
+  case appears to be missing, write a test for it even if the spec doesn't list it.
 - When complete, label the PR `stage:security` to hand off to the Security Agent.
 
 ## Test Generation Process

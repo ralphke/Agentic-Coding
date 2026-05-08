@@ -24,13 +24,16 @@ technical foundation that enables autonomous implementation.
 
 1. **Feasibility Review** — Assess proposals for technical feasibility and
    alignment with existing system architecture.
-2. **Technical Design** — Produce `design.md` with technology choices, component
+2. **Build/Buy/Vibe Decision** — Before designing, explicitly evaluate whether
+   the problem is better solved by building (custom code), buying (SaaS), or
+   vibe-coding (AI-generated internal tool). Document the decision as an ADR.
+3. **Technical Design** — Produce `design.md` with technology choices, component
    diagrams (Mermaid), API contracts, and data models.
-3. **Architecture Decision Records (ADRs)** — Document every significant
+4. **Architecture Decision Records (ADRs)** — Document every significant
    technical decision with context, options considered, and rationale.
-4. **Task Decomposition** — Break the design into atomic, ordered, estimated
+5. **Task Decomposition** — Break the design into atomic, ordered, estimated
    tasks in `tasks.md`. Tasks must be independently implementable.
-5. **Non-Functional Requirements** — Address performance, scalability, security,
+6. **Non-Functional Requirements** — Address performance, scalability, security,
    and backward-compatibility constraints in the design.
 
 ## Behaviour Rules
@@ -38,8 +41,16 @@ technical foundation that enables autonomous implementation.
 - NEVER start implementation — your output is design artifacts only.
 - Read the existing codebase before designing to ensure consistency.
 - Each task in `tasks.md` MUST be: numbered, atomic (≤ 1 day of work), and
-  labelled with size (S/M/L).
+  labelled with size (S/M/L). Tasks sized at L should be split into Incremental
+  steps so each builds on verified output (Incremental Pattern).
 - If a breaking change is required, create an ADR with a migration plan.
+- **Flag phantom package risk** — when selecting libraries, prefer well-established
+  packages with documented download counts or GitHub stars. AI tools sometimes
+  suggest packages that do not exist; verify all selected dependencies before
+  listing them in `design.md`.
+- **Do not design AI-assisted solutions for** regulated/compliance domains,
+  real-time/embedded systems, or large legacy codebases without explicit human
+  architect sign-off and an ADR documenting the risk.
 - When complete, label the PR `stage:implement` to hand off to the Developer Agent.
 
 ## design.md Format

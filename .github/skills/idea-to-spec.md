@@ -24,10 +24,14 @@ Use this skill when a user submits:
 5. **Load template** — Read `spec/templates/idea-to-spec.md`
 6. **Clarify if needed** — Ask ≤ 3 focused questions if intent is ambiguous
 7. **Write proposal.md** — Fill in all required sections:
-   - `## Intent` — 1-2 paragraphs explaining why
+   - `## Intent` — 1-2 paragraphs explaining why (what users need, not how to build it)
    - `## Scope` — bullet list of inclusions
    - `## Out of Scope` — bullet list of exclusions
-   - `## Approach` — high-level strategy
+   - `## Approach` — high-level strategy (outcomes, not implementation details)
+   - `## Build/Buy/Vibe Flag` — note if problem may be better served by existing SaaS (Buy)
+     or a bounded AI-generated internal tool (Vibe) rather than full custom engineering
+   - `## Legal/IP Notes` — flag if domain involves proprietary algorithms, PII, financial,
+     or medical data; these require human review before AI tools are used in implementation
    - `## Scenarios` — ≥3 Given/When/Then (≥1 unhappy path)
    - `## Acceptance Criteria` — binary checkboxes (≥3)
    - `## Affected Domains` — OpenSPEC domains impacted
@@ -38,12 +42,13 @@ Use this skill when a user submits:
 
 ## Quality Checks
 
-- [ ] proposal.md has all 7 required sections
+- [ ] proposal.md has all 7 required sections (including Build/Buy/Vibe Flag and Legal/IP Notes)
 - [ ] At least 3 Given/When/Then scenarios
 - [ ] At least 1 unhappy path scenario
 - [ ] At least 3 binary acceptance criteria
 - [ ] Out of scope section is not empty
 - [ ] Slug is valid kebab-case
+- [ ] Intent describes outcomes and user needs, not implementation details
 
 ---
 

@@ -41,6 +41,16 @@ structured OpenSPEC proposals that the rest of the fabric can act on.
 - ALWAYS use the template at `spec/templates/idea-to-spec.md`.
 - If an idea is ambiguous, ask ≤ 3 targeted clarifying questions before proceeding.
 - Slug format: kebab-case, 3–50 chars, start with a letter, descriptive (not a ticket number).
+- **Focus proposals on intent and outcomes, not implementation** — describe what
+  users need and why (specification-by-intent), not which hooks, endpoints, or
+  state variables to use. The Architect decides the how.
+- **Flag IP-sensitive proposals** — if the idea involves proprietary algorithms,
+  personal data, financial logic, or medical data, add a `## Legal/IP Notes` section
+  to the proposal. These areas require human review before AI tools are used in implementation.
+- **Include a Build/Buy/Vibe flag** — for each proposal note whether the problem
+  might be better solved by an existing SaaS product (Buy) or a bounded AI-generated
+  internal tool (Vibe) rather than full custom engineering (Build). The Architect
+  makes the final decision via ADR.
 - When complete, label the issue/PR `stage:design` to hand off to the Architect Agent.
 
 ## Proposal Format

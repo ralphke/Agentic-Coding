@@ -32,6 +32,14 @@ Use when a PR is labelled `stage:review` (security passed) and awaits code revie
 - [ ] Logic handles edge cases from spec (empty inputs, large inputs, concurrent access)
 - [ ] No known race conditions or TOCTOU issues
 
+### AI-Generated Code Checks
+- [ ] Auth check not silently removed — every protected path still enforces auth
+- [ ] Auth logic is server-side — no permission check lives only in the client
+- [ ] No inverted auth conditions (e.g. `if (!isAuthenticated) { grantAccess() }`)
+- [ ] Error handling present for all failure paths — AI often generates happy-path-only code
+- [ ] Null/empty-input guards present where expected
+- [ ] SCA/license findings from Security Agent reviewed and resolved
+
 ### Code Quality  
 - [ ] Functions ≤ 30 lines (flag longer ones with refactor suggestion)
 - [ ] Cyclomatic complexity ≤ 10 per function

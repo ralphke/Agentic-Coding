@@ -19,11 +19,17 @@ Use when a PR is labelled `stage:test` by the Developer Agent.
 3. **Inspect source code** — Understand the implementation to determine test levels
 4. **Plan test coverage** — Map scenarios to test level (unit/integration/e2e)
 5. **Write tests** — One test function per scenario using project test framework
-6. **Add edge cases** — Add boundary tests for numeric limits, empty inputs, large inputs
-7. **Mock externals** — Mock all HTTP calls, database queries, file I/O
-8. **Run tests** — Execute test suite and capture coverage report
-9. **Fill gaps** — Add targeted tests for uncovered lines (≥ 80% required)
-10. **Label PR** — Apply `stage:security` when coverage gate passes
+6. **Add AI failure pattern tests** — Explicitly add tests for patterns common in
+   AI-generated code that may not appear in spec scenarios:
+   - Auth check bypassed or absent (test that unauthenticated requests are rejected)
+   - Inverted auth condition (test that access is denied, not just that it returns something)
+   - Missing null/empty-input handling (test with null, empty string, empty list)
+   - Happy-path-only error handling (test that errors propagate, not silently swallow)
+7. **Add edge cases** — Add boundary tests for numeric limits, empty inputs, large inputs
+8. **Mock externals** — Mock all HTTP calls, database queries, file I/O
+9. **Run tests** — Execute test suite and capture coverage report
+10. **Fill gaps** — Add targeted tests for uncovered lines (≥ 80% required)
+11. **Label PR** — Apply `stage:security` when coverage gate passes
 
 ---
 
@@ -62,6 +68,7 @@ ExportToCsv_WithEmptyDataset_ReturnsEmptyCsv
 
 - [ ] ≥ 1 test per Given/When/Then scenario
 - [ ] All unhappy paths have negative tests
+- [ ] AI failure pattern tests present (auth bypass, inverted auth, null inputs, swallowed errors)
 - [ ] All external dependencies are mocked in unit tests
 - [ ] Coverage report shows ≥ 80% for new code
 - [ ] Test names describe the scenario without reading the body

@@ -25,10 +25,17 @@ reaches code review. Security is non-negotiable — you block merges on HIGH+ fi
 
 1. **SAST** — Run static analysis tools on all new/changed code.
 2. **Dependency Scanning** — Audit all dependency changes for CVEs.
-3. **OWASP Top 10 Review** — Manually review code changes against OWASP Top 10.
-4. **Secret Detection** — Verify no secrets are present in code or history.
-5. **Security Report** — Produce a security report summarizing all findings.
-6. **Remediation Guidance** — For each finding, provide specific fix instructions.
+3. **Phantom Package Check** — Verify every new dependency actually exists in the registry
+   and was not hallucinated by the AI; confirm it is actively maintained.
+4. **OWASP Top 10 Review** — Manually review code changes against OWASP Top 10.
+5. **AI-Specific Vulnerability Patterns** — Explicitly check for patterns common in
+   AI-generated code: inverted/missing auth logic, client-side-only security checks,
+   missing Row Level Security, SQL injection via string interpolation, and XSS.
+6. **Secret Detection** — Verify no secrets are present in code or history.
+7. **License & SCA Scan** — Run Software Composition Analysis on all dependency changes;
+   flag GPL/copyleft or unknown-license packages before merge.
+8. **Security Report** — Produce a security report summarizing all findings.
+9. **Remediation Guidance** — For each finding, provide specific fix instructions.
 
 ## Behaviour Rules
 
@@ -36,6 +43,12 @@ reaches code review. Security is non-negotiable — you block merges on HIGH+ fi
 - MEDIUM findings generate a warning comment and a backlog issue, but do NOT block merge.
 - Always provide a security summary comment even when no findings are present.
 - For false positives: document the reason for acceptance with your analysis.
+- **AI code has statistically more vulnerabilities than human-written code** — treat
+  AI-generated code with elevated scrutiny. Specific checks are in the checklist below.
+- Block merge if any phantom package is found — hallucinated package names are a
+  supply-chain attack vector.
+- Block merge if GPL/copyleft packages appear in a proprietary codebase without
+  explicit legal approval.
 - When complete (clean or accepted risks), label the PR `stage:review`.
 
 ## Security Review Checklist
@@ -51,6 +64,16 @@ reaches code review. Security is non-negotiable — you block merges on HIGH+ fi
 - [ ] A08 — Software Integrity: no unsigned dependencies, build pipeline secured
 - [ ] A09 — Logging: security events logged, no PII in logs
 - [ ] A10 — SSRF: outbound URL inputs validated and allowlisted
+
+### AI-Generated Code Specific Checks
+- [ ] Auth logic is server-side — no feature gate or permission check lives only in the client
+- [ ] No inverted auth conditions (e.g. `if (!isAuthenticated) { allowAccess() }`)
+- [ ] Database queries use parameterized statements, not string interpolation
+- [ ] Row Level Security (RLS) or equivalent is configured for any new data surfaces
+- [ ] Every new dependency exists in the official registry and is actively maintained
+- [ ] No phantom/hallucinated package names — cross-check against npm/PyPI/NuGet
+- [ ] License compliance: no undeclared GPL/copyleft packages in proprietary code
+- [ ] No prompt-injection risk: untrusted input is not forwarded into AI API calls unsanitised
 
 ### SAST Tools by Language
 ```bash

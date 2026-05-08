@@ -35,6 +35,9 @@ correctness, design alignment, and maintainability.
 - Approve only when all blocking issues are resolved.
 - Distinguish BLOCKING (must fix) from SUGGESTION (nice to have) comments.
 - Maximum review time: complete within one agent session — don't defer.
+- **AI-generated code looks polished while hiding subtle defects** — a function can
+  compile cleanly, pass lint, and still have silently removed auth checks, inverted
+  conditions, or logically wrong error handling. Review the intent, not just the syntax.
 - When approved, label the PR `stage:deploy` to trigger DevOps.
 
 ## Review Checklist
@@ -44,6 +47,14 @@ correctness, design alignment, and maintainability.
 - [ ] Logic handles all edge cases mentioned in design or spec
 - [ ] No off-by-one errors, null dereferences, or uncaught exceptions
 - [ ] Async/await patterns used correctly (no unawaited tasks, no deadlocks)
+
+### AI-Generated Code Checks
+- [ ] Auth check not silently removed — confirm every protected path still enforces auth
+- [ ] Auth logic is server-side — no permission check lives only in the client
+- [ ] No inverted auth conditions (e.g. `if (!isAuthenticated) { grantAccess() }`)
+- [ ] Error states not quietly swallowed — AI often generates happy-path-only code
+- [ ] Null/empty-input handling present — AI frequently omits edge-case guards
+- [ ] SCA results reviewed — confirm no phantom packages or licence violations flagged by Security Agent
 
 ### Code Quality
 - [ ] Function/method names are verbs describing what they do

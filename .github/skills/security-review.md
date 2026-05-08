@@ -16,15 +16,23 @@ Use when a PR is labelled `stage:security` by the QA Engineer Agent.
 
 1. **Run SAST** — Execute static analysis tools for the relevant languages
 2. **Scan dependencies** — Run dependency vulnerability scanner on manifest changes
-3. **Check for secrets** — Review diff for any hardcoded credentials or API keys
-4. **OWASP Top 10 review** — Manual checklist review of code changes
-5. **Assess findings** — Classify each finding by severity (CRITICAL/HIGH/MEDIUM/LOW)
-6. **Write security report** — Post structured report as PR comment
-7. **Gate decision:**
-   - CRITICAL or HIGH → label `security:blocked`, block merge, open remediation issues
-   - MEDIUM → warning comment + backlog issue, do NOT block
-   - LOW/INFO → informational only
-8. **On clean/accepted** — Label `security:passed` + `stage:review`
+3. **Phantom package check** — For every new dependency, verify it exists on the
+   official registry (npm/PyPI/NuGet) and is actively maintained. AI tools occasionally
+   hallucinate package names that attackers can later register (supply-chain risk).
+4. **License / SCA scan** — Run a Software Composition Analysis tool; flag any
+   GPL/copyleft or unknown-license package in a proprietary codebase.
+5. **Check for secrets** — Review diff for any hardcoded credentials or API keys
+6. **OWASP Top 10 review** — Manual checklist review of code changes
+7. **AI-specific checks** — Verify auth is server-side, not inverted, and not
+   client-side-only; check for missing RLS on new data surfaces; verify no
+   prompt-injection risk from untrusted input passed to AI APIs
+8. **Assess findings** — Classify each finding by severity (CRITICAL/HIGH/MEDIUM/LOW)
+9. **Write security report** — Post structured report as PR comment
+10. **Gate decision:**
+    - CRITICAL or HIGH → label `security:blocked`, block merge, open remediation issues
+    - MEDIUM → warning comment + backlog issue, do NOT block
+    - LOW/INFO → informational only
+11. **On clean/accepted** — Label `security:passed` + `stage:review`
 
 ---
 
@@ -42,8 +50,16 @@ dotnet tool run security-scan --project src/ --format sarif
 npm audit --audit-level high --json > npm-audit.json
 npx eslint . --plugin security --format json > eslint-security.json
 
+# License / SCA scan (all languages)
+# Python
+pip-licenses --format=json > pip-licenses.json
+# Node
+npx license-checker --json > license-report.json
+
 # Universal secret scan
 # (GitHub Secret Scanning runs automatically on push)
+# Additional local scan:
+# gitleaks detect --source .
 ```
 
 ---
@@ -104,7 +120,10 @@ No vulnerable dependencies detected.
 
 - [ ] All SAST tools executed (relevant to repo languages)
 - [ ] Dependency manifest changes scanned
+- [ ] Phantom package check performed — all new dependencies verified on official registry
+- [ ] License/SCA scan completed — no unresolved GPL/copyleft findings
 - [ ] All 10 OWASP categories assessed
+- [ ] AI-specific checks completed (server-side auth, no inverted logic, RLS, prompt injection)
 - [ ] Security report posted on PR
 - [ ] Correct gate decision made (CRITICAL/HIGH block; MEDIUM warn)
 - [ ] Remediation issues opened for all blocking findings
