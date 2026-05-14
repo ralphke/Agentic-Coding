@@ -6,8 +6,24 @@
       "type": "shell",
       "command": "pwsh",
       "args": [
-        "-ExecutionPolicy", "Bypass",
-        "-File", "${workspaceFolder}\\.devcontainer\\load-localenv.ps1"
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\.devcontainer\\load-localenv.ps1"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Devcontainer smoke-check",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "${workspaceFolder}/scripts/devcontainer-smoke-check.sh"
       ],
       "presentation": {
         "reveal": "always",
