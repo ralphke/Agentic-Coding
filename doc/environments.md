@@ -16,7 +16,7 @@ This document describes the target runtimes, participant device matrix, and how 
 
 ### About the tools
 
-**Python 3.14** — latest stable release. Used for scripting-style exercises and agentic automation examples.
+**Python 3.14** — latest stable release. All environments (Windows `.venv` and Linux `.venv-linux`) use Python 3.14.x for consistency. Used for scripting-style exercises and agentic automation examples.
 
 **[.NET 10](https://dotnet.microsoft.com/download/dotnet/10.0)** — latest LTS-track release. Used for ASP.NET Web API exercises and Aspire orchestration.
 
@@ -65,6 +65,15 @@ All three paths use the same `.devcontainer/devcontainer.json` — you get ident
    docker version       # host Docker via socket
    ```
 
+### Python interpreter note
+
+This workspace uses different Python environments depending on how it starts, but **both use Python 3.14.x** for consistency:
+
+- **Dev container startup**: Uses `.venv-linux/bin/python` (Python 3.14, installed via devcontainer feature)
+- **Direct Windows startup**: Uses `.venv/Scripts/python.exe` (Python 3.14, managed by Windows)
+
+That split keeps the right interpreter selected without needing to change settings manually when switching between Linux and Windows, while maintaining version parity across both paths.
+
 ### Aspire dashboard
 
 When you run an Aspire application, the dashboard starts on port **18888**. VS Code automatically forwards this port and opens it in your browser. If it does not open automatically, navigate to `http://localhost:18888`.
@@ -107,15 +116,15 @@ Notes:
 
 ## What's in the devcontainer
 
-| Component | How it's installed |
-|-----------|--------------------|
-| Python 3.14 | devcontainer feature `ghcr.io/devcontainers/features/python:1` |
-| .NET 10 SDK | devcontainer feature `ghcr.io/devcontainers/features/dotnet:2` |
-| Docker CLI (host socket) | devcontainer feature `ghcr.io/devcontainers/features/docker-outside-of-docker:1` |
-| Azure CLI | devcontainer feature `ghcr.io/devcontainers/features/azure-cli:1` |
-| .NET Aspire workload | `post-create.sh` → `dotnet workload install aspire` |
-| Data API Builder | `post-create.sh` → `dotnet tool install -g microsoft.dataapibuilder` |
-| VS Code extensions | C# Dev Kit, Python, Pylance, REST Client, Docker, GitHub Copilot |
+| Component | How it's installed | Version |
+|-----------|-------------------|---------|
+| Python 3.14 | devcontainer feature `ghcr.io/devcontainers/features/python:1` with `version: "3.14"` | 3.14 (latest) |
+| .NET 10 SDK | devcontainer feature `ghcr.io/devcontainers/features/dotnet:2` | 10.0 (latest) |
+| Docker CLI (host socket) | devcontainer feature `ghcr.io/devcontainers/features/docker-outside-of-docker:1` | latest |
+| Azure CLI | devcontainer feature `ghcr.io/devcontainers/features/azure-cli:1` | latest |
+| .NET Aspire workload | `post-create.sh` → `dotnet workload install aspire` | latest |
+| Data API Builder | `post-create.sh` → `dotnet tool install -g microsoft.dataapibuilder` | latest |
+| VS Code extensions | C# Dev Kit, Python, Pylance, REST Client, Docker, GitHub Copilot | latest |
 
 ### Why docker-outside-of-docker?
 

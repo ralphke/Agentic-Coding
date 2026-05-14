@@ -1,0 +1,5 @@
+# PNG to SVG Conversion Script Requirements
+# Compatible with Python 3.14.5
+
+# Image processing
+Pillow>=11.0.0

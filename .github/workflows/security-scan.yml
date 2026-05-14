@@ -1,0 +1,135 @@
+name: DevContainer Security Scan
+
+on:
+  push:
+    paths:
+      - '.devcontainer/**'
+      - '.github/workflows/security-scan.yml'
+  pull_request:
+    paths:
+      - '.devcontainer/**'
+  workflow_dispatch:
+
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build devcontainer image
+        uses: docker/build-push-action@v5
+        with:
+          context: .devcontainer
+          file: .devcontainer/Dockerfile
+          tags: |
+            agentic-workshop:latest
+            agentic-workshop:${{ github.sha }}
+          load: true
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max
+      
+      - name: Run Docker Scout CVE scan
+        uses: docker/scout-action@v1
+        with:
+          image: agentic-workshop:latest
+          format: sarif
+          output: scout-results.sarif
+          summary: true
+      
+      - name: Upload Scout results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: scout-results.sarif
+          category: docker-scout-devcontainer
+      
+      - name: Fail on HIGH/CRITICAL CVEs
+        run: |
+          docker scout cves agentic-workshop:latest --format json | \
+            jq 'if (.vulnerabilities[]? | select(.severity == "critical" or .severity == "high")) then 
+              "\(.severity): \(.title)" | debug else empty end' && \
+            CRITICAL_COUNT=$(docker scout cves agentic-workshop:latest --format json | \
+              jq '[.vulnerabilities[]? | select(.severity == "critical" or .severity == "high")] | length') && \
+            if [ "$CRITICAL_COUNT" -gt 0 ]; then 
+              echo "❌ Found $CRITICAL_COUNT HIGH/CRITICAL CVEs - build failed"; 
+              exit 1; 
+            else 
+              echo "✅ No HIGH/CRITICAL CVEs found"; 
+            fi
+
+  trivy-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Build image for Trivy
+        run: |
+          docker build -t agentic-workshop:trivy .devcontainer
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: agentic-workshop:trivy
+          format: sarif
+          output: trivy-results.sarif
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-devcontainer
+
+  trivy-fs-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    container:
+      image: mcr.microsoft.com/devcontainers/base:ubuntu
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Trivy
+        run: |
+          apt-get update -y
+          apt-get install -y wget apt-transport-https gnupg
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | tee /etc/apt/sources.list.d/trivy.list
+          apt-get update -y
+          apt-get install -y trivy
+
+      - name: Run Trivy filesystem scan (devcontainer simulation)
+        run: |
+          trivy fs --format sarif --output trivy-fs-results.sarif --severity CRITICAL,HIGH /
+
+      - name: Upload Trivy fs results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: trivy-fs-results.sarif
+          category: trivy-devcontainer-fs
+
+      - name: Fail on HIGH/CRITICAL CVEs
+        run: |
+          CRITICAL_COUNT=$(trivy fs --format json --severity CRITICAL,HIGH / | \
+            jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL" or .Severity == "HIGH")] | length')
+          if [ "$CRITICAL_COUNT" -gt 0 ]; then
+            echo "❌ Found $CRITICAL_COUNT HIGH/CRITICAL CVEs in filesystem scan - build failed"
+            exit 1
+          else
+            echo "✅ No HIGH/CRITICAL CVEs found in filesystem scan"
+          fi
