@@ -6,7 +6,7 @@
     "ghcr.io/devcontainers/features/python:1": {
       "installTools": true,
       "optimize": true,
-      "version": "os-provided"
+      "version": "3.14"
     },
     "ghcr.io/devcontainers/features/dotnet:2": {
       "tabCompletions": true,
@@ -75,7 +75,7 @@
         "GitHub.vscode-pull-request-github"
       ],
       "settings": {
-        "python.defaultInterpreterPath": "/usr/local/bin/python3.12",
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv-linux/bin/python3",
         "dotnet.defaultSolution": "disable",
         "editor.formatOnSave": true
       }
