@@ -133,6 +133,12 @@ The workshop content is curated from:
 - [VS Code .github build patterns](https://github.com/microsoft/vscode/tree/main/.github)
 - [VS Code Copilot Agents App](https://code.visualstudio.com/docs/copilot/agents-app)
 
+## Shared agentic assets
+
+Reusable Software Fabric workflows, templates, prompts, instructions, agents, and skills are now sourced from [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared). Use `.github/workflows/sync-agentic-shared.yml` to pull the canonical shared content into this repository.
+
+Workshop-specific labs, documentation, and environment setup remain owned locally in this repository.
+
 ## Repository layout
 
 - .github/prompts: prompt history recorded in operation order.

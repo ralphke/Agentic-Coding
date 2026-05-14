@@ -1,0 +1,75 @@
+name: Sync agentic-shared
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "11 6 * * 1"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    name: Sync shared Software Fabric assets
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout agentic-shared
+        uses: actions/checkout@v4
+        with:
+          repository: ralphke/agentic-shared
+          path: .tmp/agentic-shared
+          sparse-checkout: |
+            .github/copilot-instructions.md
+            .github/ISSUE_TEMPLATE/copilot-task.yml
+            .github/ISSUE_TEMPLATE/idea-capture.yml
+            .github/workflows/copilot-task-router.yml
+            .github/workflows/sdlc-orchestrator.yml
+            .github/prompts/opsx-apply.prompt.md
+            .github/prompts/opsx-propose.prompt.md
+            .github/prompts/opsx-verify.prompt.md
+            .github/prompts/sdlc-kickoff.prompt.md
+            .github/instructions
+            .github/skills
+            .github/agents
+            spec/spec-template.md
+          sparse-checkout-cone-mode: false
+
+      - name: Copy shared assets
+        run: |
+          mkdir -p .github/ISSUE_TEMPLATE .github/workflows .github/prompts .github/instructions .github/skills .github/agents spec
+          cp .tmp/agentic-shared/.github/copilot-instructions.md .github/copilot-instructions.md
+          cp .tmp/agentic-shared/.github/ISSUE_TEMPLATE/copilot-task.yml .github/ISSUE_TEMPLATE/copilot-task.yml
+          cp .tmp/agentic-shared/.github/ISSUE_TEMPLATE/idea-capture.yml .github/ISSUE_TEMPLATE/idea-capture.yml
+          cp .tmp/agentic-shared/.github/workflows/copilot-task-router.yml .github/workflows/copilot-task-router.yml
+          cp .tmp/agentic-shared/.github/workflows/sdlc-orchestrator.yml .github/workflows/sdlc-orchestrator.yml
+          cp .tmp/agentic-shared/.github/prompts/opsx-apply.prompt.md .github/prompts/opsx-apply.prompt.md
+          cp .tmp/agentic-shared/.github/prompts/opsx-propose.prompt.md .github/prompts/opsx-propose.prompt.md
+          cp .tmp/agentic-shared/.github/prompts/opsx-verify.prompt.md .github/prompts/opsx-verify.prompt.md
+          cp .tmp/agentic-shared/.github/prompts/sdlc-kickoff.prompt.md .github/prompts/sdlc-kickoff.prompt.md
+          cp -R .tmp/agentic-shared/.github/instructions/. .github/instructions/
+          cp -R .tmp/agentic-shared/.github/skills/. .github/skills/
+          cp -R .tmp/agentic-shared/.github/agents/. .github/agents/
+          cp .tmp/agentic-shared/spec/spec-template.md spec/spec-template.md
+
+      - name: Create sync pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: sync/agentic-shared
+          delete-branch: true
+          commit-message: Sync shared Software Fabric assets from agentic-shared
+          title: Sync shared Software Fabric assets from agentic-shared
+          body: |
+            Sync canonical shared assets from `ralphke/agentic-shared`.
+
+            Synced scope:
+            - Copilot instructions
+            - Copilot and idea issue templates
+            - Copilot routing and SDLC orchestration workflows
+            - Shared prompts, instructions, skills, and agents
+            - Shared `spec/spec-template.md`
+
+            Workshop-specific labs, docs, and environment files remain local to this repository.
