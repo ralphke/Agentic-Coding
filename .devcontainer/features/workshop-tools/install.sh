@@ -6,9 +6,21 @@ export DEBIAN_FRONTEND=noninteractive
 echo "[workshop-tools] Installing apt dependencies..."
 apt-get update
 apt-get install -y --no-install-recommends \
+  ca-certificates \
   bubblewrap \
+  gnupg \
+  lsb-release \
   potrace \
-  python3-pil
+  python3-pil \
+  wget
+
+echo "[workshop-tools] Installing Trivy..."
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
+  | gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" \
+  > /etc/apt/sources.list.d/trivy.list
+apt-get update
+apt-get install -y --no-install-recommends trivy
 rm -rf /var/lib/apt/lists/*
 
 echo "[workshop-tools] Installing Data API Builder (dab) to /usr/local/bin..."

@@ -49,6 +49,7 @@ check_cmd aspire "Aspire CLI"
 check_cmd copilot "GitHub Copilot CLI"
 check_cmd potrace "Potrace"
 check_cmd bwrap "Bubblewrap"
+check_cmd trivy "Trivy"
 check_cmd python3.14 "Python 3.14"
 check_cmd dotnet ".NET SDK"
 
@@ -72,6 +73,7 @@ check_version "aspire" aspire --version
 check_version "copilot" copilot --version
 check_version "potrace" potrace --version
 check_version "bwrap" bwrap --version
+check_version "trivy" trivy --version
 check_version "python3.14" python3.14 --version
 check_version "dotnet" dotnet --version
 

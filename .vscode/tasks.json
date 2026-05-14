@@ -31,6 +31,38 @@
         "focus": true
       },
       "problemMatcher": []
+    },
+    {
+      "label": "CVE scan (current image, Trivy)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "${workspaceFolder}/.devcontainer/scan-cves.sh",
+        "--current",
+        "--trivy"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "CVE scan (current image, full)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "${workspaceFolder}/.devcontainer/scan-cves.sh",
+        "--current",
+        "--full"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
+      "problemMatcher": []
     }
   ]
 }
