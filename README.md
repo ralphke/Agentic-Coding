@@ -120,7 +120,7 @@ flowchart LR
     class CI,SEC_GATE,PR_GATE,CD gate;
 ```
 ## Agentic SDLC process diagram
-![Agentic SDLC Process Roles and resposibilites](resources\Agentic-SDLC.png)
+![Agentic SDLC Process Roles and resposibilites](image/Agentic-SDLC.png)
 
 The workshop content is curated from:
 
