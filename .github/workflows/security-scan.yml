@@ -14,12 +14,15 @@ on:
     - cron: '23 2 1 * *'
   workflow_dispatch:
 
+env:
+  TRIVY_IMAGE: aquasec/trivy:0.54.1
+  # ghcr.io owner must be lowercase; hardcoded to avoid case issues with github.repository
+  DEVCONTAINER_IMAGE: ghcr.io/ralphke/agentic-coding-devcontainer:latest
+
 jobs:
   trivy-image-fast:
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    env:
-      TRIVY_IMAGE: aquasec/trivy:0.54.1
     permissions:
       contents: read
       security-events: write
@@ -28,27 +31,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
-      - name: Build devcontainer image via Compose
-        id: resolve_image
+      - name: Pull devcontainer image from GHCR
         run: |
-          docker compose -f .devcontainer/docker-compose.yml build agentic-coding
-          IMAGE_NAME=$(docker compose -f .devcontainer/docker-compose.yml config --format json | python3 -c "import sys,json; cfg=json.load(sys.stdin); print(list(cfg['services'].values())[0]['image'])")
-          if [ -z "$IMAGE_NAME" ]; then
-            echo "Could not resolve image name from .devcontainer/docker-compose.yml"
-            exit 1
-          fi
-          docker image inspect "$IMAGE_NAME" >/dev/null
-          echo "image_name=$IMAGE_NAME" >> "$GITHUB_OUTPUT"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker pull "$DEVCONTAINER_IMAGE"
 
       - name: Generate Trivy image SARIF (fast)
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/work" "$TRIVY_IMAGE" \
-            image --severity HIGH,CRITICAL --format sarif --output /work/trivy-image-fast.sarif --exit-code 0 --no-progress "${{ steps.resolve_image.outputs.image_name }}"
+            image --severity HIGH,CRITICAL --format sarif --output /work/trivy-image-fast.sarif --exit-code 0 --no-progress "$DEVCONTAINER_IMAGE"
 
       - name: Enforce HIGH/CRITICAL gate (image)
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" \
-            image --severity HIGH,CRITICAL --exit-code 1 --no-progress "${{ steps.resolve_image.outputs.image_name }}"
+            image --severity HIGH,CRITICAL --exit-code 1 --no-progress "$DEVCONTAINER_IMAGE"
 
       - name: Upload Trivy image results
         if: always() && hashFiles('trivy-image-fast.sarif') != ''
@@ -61,7 +57,7 @@ jobs:
         if: always()
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" \
-            image --severity HIGH,CRITICAL --format json "${{ steps.resolve_image.outputs.image_name }}" > trivy-image-fast.json
+            image --severity HIGH,CRITICAL --format json "$DEVCONTAINER_IMAGE" > trivy-image-fast.json
 
           HIGH_COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length' trivy-image-fast.json)
           CRITICAL_COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' trivy-image-fast.json)
@@ -71,14 +67,12 @@ jobs:
             echo ""
             echo "| Scan | High | Critical |"
             echo "|---|---:|---:|"
-            echo "| Image (${{ steps.resolve_image.outputs.image_name }}) | ${HIGH_COUNT} | ${CRITICAL_COUNT} |"
+            echo "| Image ($DEVCONTAINER_IMAGE) | ${HIGH_COUNT} | ${CRITICAL_COUNT} |"
           } >> "$GITHUB_STEP_SUMMARY"
 
   trivy-deep-weekly:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    env:
-      TRIVY_IMAGE: aquasec/trivy:0.54.1
     permissions:
       contents: read
       security-events: write
@@ -87,22 +81,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
-      - name: Build devcontainer image via Compose
-        id: resolve_image
+      - name: Pull devcontainer image from GHCR
         run: |
-          docker compose -f .devcontainer/docker-compose.yml build agentic-coding
-          IMAGE_NAME=$(docker compose -f .devcontainer/docker-compose.yml config --format json | python3 -c "import sys,json; cfg=json.load(sys.stdin); print(list(cfg['services'].values())[0]['image'])")
-          if [ -z "$IMAGE_NAME" ]; then
-            echo "Could not resolve image name from .devcontainer/docker-compose.yml"
-            exit 1
-          fi
-          docker image inspect "$IMAGE_NAME" >/dev/null
-          echo "image_name=$IMAGE_NAME" >> "$GITHUB_OUTPUT"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker pull "$DEVCONTAINER_IMAGE"
 
       - name: Generate Trivy deep image SARIF (report)
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/work" "$TRIVY_IMAGE" \
-            image --severity HIGH,CRITICAL --format sarif --output /work/trivy-deep-image.sarif --exit-code 0 --no-progress "${{ steps.resolve_image.outputs.image_name }}"
+            image --severity HIGH,CRITICAL --format sarif --output /work/trivy-deep-image.sarif --exit-code 0 --no-progress "$DEVCONTAINER_IMAGE"
 
       - name: Upload deep image results
         if: always() && hashFiles('trivy-deep-image.sarif') != ''
@@ -127,7 +114,7 @@ jobs:
         if: always()
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/repo" "$TRIVY_IMAGE" \
-            image --severity HIGH,CRITICAL --format json "${{ steps.resolve_image.outputs.image_name }}" > trivy-deep-image.json
+            image --severity HIGH,CRITICAL --format json "$DEVCONTAINER_IMAGE" > trivy-deep-image.json
 
           docker run --rm -v "$PWD:/repo" "$TRIVY_IMAGE" \
             fs --severity HIGH,CRITICAL --format json /repo > trivy-deep-fs.json
@@ -142,6 +129,6 @@ jobs:
             echo ""
             echo "| Scan | High | Critical |"
             echo "|---|---:|---:|"
-            echo "| Image (${{ steps.resolve_image.outputs.image_name }}) | ${IMG_HIGH} | ${IMG_CRITICAL} |"
+            echo "| Image ($DEVCONTAINER_IMAGE) | ${IMG_HIGH} | ${IMG_CRITICAL} |"
             echo "| Filesystem (repo) | ${FS_HIGH} | ${FS_CRITICAL} |"
           } >> "$GITHUB_STEP_SUMMARY"

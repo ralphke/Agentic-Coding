@@ -1,0 +1,48 @@
+name: Publish DevContainer Image
+
+"on":
+  push:
+    branches: [main]
+    paths:
+      - '.devcontainer/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  # ghcr.io owner must be lowercase; hardcoded to avoid case issues with github.repository
+  DEVCONTAINER_IMAGE: ghcr.io/ralphke/agentic-coding-devcontainer
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build devcontainer image via Compose
+        run: docker compose -f .devcontainer/docker-compose.yml build agentic-coding
+
+      - name: Tag and push to GHCR
+        run: |
+          docker tag agentic-coding-image:latest "${DEVCONTAINER_IMAGE}:latest"
+          docker tag agentic-coding-image:latest "${DEVCONTAINER_IMAGE}:${{ github.sha }}"
+          docker push "${DEVCONTAINER_IMAGE}:latest"
+          docker push "${DEVCONTAINER_IMAGE}:${{ github.sha }}"
+
+      - name: Add publish summary
+        run: |
+          {
+            echo "## DevContainer Image Published"
+            echo ""
+            echo "| Tag | Value |"
+            echo "|---|---|"
+            echo "| latest | \`${DEVCONTAINER_IMAGE}:latest\` |"
+            echo "| sha | \`${DEVCONTAINER_IMAGE}:${{ github.sha }}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"

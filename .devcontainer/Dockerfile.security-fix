@@ -1,5 +1,7 @@
-FROM vsc-agentic-coding-90b20fc2c7ebd922c7765dca321d4b38f103999d96731b1f783a1facbd615b2e-features:latest
-# docker compose -f docker-compose.yml build 2>&1
+FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
+# Base image matches devcontainer.json "image" field.
+# The vsc-* local hash image only exists on the developer's machine and cannot be
+# pulled in CI; this Dockerfile targets the public upstream image instead.
 # Fix system-level vulnerabilities
 RUN apt-get update && \
     apt-get upgrade -y && \
