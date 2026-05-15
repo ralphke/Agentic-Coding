@@ -106,12 +106,11 @@ jobs:
       - name: Vulnerability scan (grype) — BLOCKING on HIGH+
         run: |
           docker run --rm \
-            -v "$PWD:/src" \
+            -v "$PWD/sbom.cyclonedx.json:/sbom.cyclonedx.json:ro" \
             "$GRYPE_IMAGE" \
-            sbom:/src/sbom.cyclonedx.json \
+            sbom:/sbom.cyclonedx.json \
             --fail-on high \
-            --output json \
-            --file /src/grype-report.json
+            --output json > grype-report.json
           echo "✅ Grype scan passed — no HIGH or CRITICAL vulnerabilities"
 
       - name: Upload Grype report
@@ -126,11 +125,10 @@ jobs:
         if: always()
         run: |
           docker run --rm \
-            -v "$PWD:/src" \
+            -v "$PWD/sbom.cyclonedx.json:/sbom.cyclonedx.json:ro" \
             "$GRYPE_IMAGE" \
-            sbom:/src/sbom.cyclonedx.json \
-            --output sarif \
-            --file /src/grype-results.sarif || true
+            sbom:/sbom.cyclonedx.json \
+            --output sarif > grype-results.sarif || true
 
       - name: Upload Grype SARIF to GitHub Code Scanning
         if: always() && needs.code-scanning-probe.outputs.enabled == 'true' && hashFiles('grype-results.sarif') != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
