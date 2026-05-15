@@ -46,6 +46,9 @@ permissions:
 env:
   TRIVY_IMAGE: aquasec/trivy:0.54.1
   DEVCONTAINER_IMAGE_NAME: agentic-coding-devcontainer
+  # Chainguard rebuilds this image daily so the bundled vulnerability DB is
+  # always fresh (well within Grype's 5-day max-age limit).
+  GRYPE_IMAGE: cgr.dev/chainguard/grype:latest
 
 jobs:
   # ─── CODE SCANNING AVAILABILITY PROBE ─────────────────────────────────────
@@ -98,23 +101,13 @@ jobs:
           path: sbom.cyclonedx.json
           retention-days: 90
 
-      # The DB bundled in the grype image ages quickly (max allowed age: 5 days).
-      # Refresh it via `grype db update` into a host-mounted cache directory
-      # before running any scan so all subsequent docker runs share a fresh DB.
-      - name: Update Grype vulnerability database
-        run: |
-          mkdir -p "$PWD/.grype-db"
-          docker run --rm \
-            -v "$PWD/.grype-db:/root/.cache/grype/db" \
-            anchore/grype:v0.78.0 db update
-          echo "✅ Grype vulnerability database updated"
-
+      # The Chainguard image is rebuilt daily so its bundled DB is always
+      # within Grype's 5-day max-age limit — no manual db update needed.
       - name: Vulnerability scan (grype) — BLOCKING on HIGH+
         run: |
           docker run --rm \
             -v "$PWD:/src" \
-            -v "$PWD/.grype-db:/root/.cache/grype/db" \
-            anchore/grype:v0.78.0 \
+            "$GRYPE_IMAGE" \
             sbom:/src/sbom.cyclonedx.json \
             --fail-on high \
             --output json \
@@ -134,8 +127,7 @@ jobs:
         run: |
           docker run --rm \
             -v "$PWD:/src" \
-            -v "$PWD/.grype-db:/root/.cache/grype/db" \
-            anchore/grype:v0.78.0 \
+            "$GRYPE_IMAGE" \
             sbom:/src/sbom.cyclonedx.json \
             --output sarif \
             --file /src/grype-results.sarif || true
