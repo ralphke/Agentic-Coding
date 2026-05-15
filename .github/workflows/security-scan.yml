@@ -32,7 +32,7 @@ jobs:
         id: resolve_image
         run: |
           docker compose -f .devcontainer/docker-compose.yml build agentic-coding
-          IMAGE_NAME=$(docker compose -f .devcontainer/docker-compose.yml config | awk '/image:/ {print $2; exit}')
+          IMAGE_NAME=$(docker compose -f .devcontainer/docker-compose.yml config --format json | python3 -c "import sys,json; cfg=json.load(sys.stdin); print(list(cfg['services'].values())[0]['image'])")
           if [ -z "$IMAGE_NAME" ]; then
             echo "Could not resolve image name from .devcontainer/docker-compose.yml"
             exit 1
@@ -91,7 +91,7 @@ jobs:
         id: resolve_image
         run: |
           docker compose -f .devcontainer/docker-compose.yml build agentic-coding
-          IMAGE_NAME=$(docker compose -f .devcontainer/docker-compose.yml config | awk '/image:/ {print $2; exit}')
+          IMAGE_NAME=$(docker compose -f .devcontainer/docker-compose.yml config --format json | python3 -c "import sys,json; cfg=json.load(sys.stdin); print(list(cfg['services'].values())[0]['image'])")
           if [ -z "$IMAGE_NAME" ]; then
             echo "Could not resolve image name from .devcontainer/docker-compose.yml"
             exit 1
