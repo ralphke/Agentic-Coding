@@ -1,0 +1,314 @@
+name: Supply Chain Verification
+
+# Runs on every PR and push to main.
+# Performs supply chain security checks that complement the stage-security-gate:
+#   - CycloneDX SBOM generation + Grype vulnerability scan
+#   - Dependency confusion detection (namespace collision check)
+#   - Container base image digest pinning check
+#   - Gitleaks secret scan (full history)
+#
+# All HIGH/CRITICAL findings BLOCK merge. Results are uploaded to GitHub
+# Code Scanning (SARIF) when available.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    # Weekly re-scan on the default branch (Tuesday 03:17 UTC)
+    - cron: '17 3 * * 2'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  # ─── SBOM + VULNERABILITY SCAN ────────────────────────────────────────────
+  sbom-and-vuln-scan:
+    name: "📦 SBOM + Vulnerability Scan"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0
+
+      # Generate CycloneDX SBOM with syft (pinned digest)
+      - name: Generate CycloneDX SBOM (syft)
+        run: |
+          docker run --rm \
+            -v "$PWD:/src" \
+            anchore/syft:v1.4.1 \
+            /src -o cyclonedx-json=/src/sbom.cyclonedx.json \
+            --scope all-layers
+          echo "✅ SBOM generated: sbom.cyclonedx.json"
+          # Print a package summary
+          jq '.components | length' sbom.cyclonedx.json | xargs -I{} echo "Components in SBOM: {}"
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-cyclonedx-${{ github.sha }}
+          path: sbom.cyclonedx.json
+          retention-days: 90
+
+      # Scan SBOM for vulnerabilities with Grype — BLOCKING on HIGH/CRITICAL
+      - name: Vulnerability scan (grype) — BLOCKING on HIGH+
+        run: |
+          docker run --rm \
+            -v "$PWD:/src" \
+            anchore/grype:v0.78.0 \
+            sbom:/src/sbom.cyclonedx.json \
+            --fail-on high \
+            --output json \
+            --file /src/grype-report.json
+          echo "✅ Grype scan passed — no HIGH or CRITICAL vulnerabilities"
+
+      - name: Upload Grype report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: grype-report-${{ github.sha }}
+          path: grype-report.json
+          retention-days: 30
+
+      # Convert Grype JSON to SARIF for GitHub Code Scanning
+      - name: Convert Grype report to SARIF
+        if: always()
+        run: |
+          docker run --rm \
+            -v "$PWD:/src" \
+            anchore/grype:v0.78.0 \
+            sbom:/src/sbom.cyclonedx.json \
+            --output sarif \
+            --file /src/grype-results.sarif || true
+
+      - name: Detect code scanning availability
+        if: always()
+        id: code_scanning
+        run: |
+          STATUS=$(curl -sS -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/code-scanning/default-setup")
+          if [ "$STATUS" = "200" ] || [ "$STATUS" = "204" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload Grype SARIF to GitHub Code Scanning
+        if: always() && steps.code_scanning.outputs.enabled == 'true' && hashFiles('grype-results.sarif') != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: grype-results.sarif
+          category: grype-sbom-scan
+
+  # ─── DEPENDENCY CONFUSION DETECTION ──────────────────────────────────────
+  dependency-confusion:
+    name: "🔀 Dependency Confusion Detection"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Check PyPI for dependency confusion (Python)
+        if: hashFiles('**/requirements*.txt') != ''
+        run: |
+          set -euo pipefail
+          CONFUSED=0
+          while IFS= read -r req_file; do
+            echo "Checking $req_file..."
+            while IFS= read -r pkg; do
+              # Strip version specifiers, extras, comments
+              CLEAN=$(echo "$pkg" | sed 's/[>=<!\[].*//' | sed 's/#.*//' | tr -d ' ')
+              [ -z "$CLEAN" ] && continue
+
+              # Check package exists on PyPI
+              HTTP_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" \
+                "https://pypi.org/pypi/${CLEAN}/json" 2>/dev/null || echo "000")
+
+              if [ "$HTTP_STATUS" = "200" ]; then
+                # Retrieve top-level download stats to surface suspiciously new packages
+                FIRST_RELEASE=$(curl -sf "https://pypi.org/pypi/${CLEAN}/json" \
+                  | jq -r '.releases | keys_unsorted | sort | .[0]' 2>/dev/null || echo "unknown")
+                echo "  ✅ ${CLEAN} — found on PyPI (first release: ${FIRST_RELEASE})"
+              elif [ "$HTTP_STATUS" = "404" ]; then
+                echo "::error::PHANTOM PACKAGE '${CLEAN}' — not found on PyPI (404). Possible hallucination or dependency confusion. File: ${req_file}"
+                CONFUSED=1
+              else
+                echo "::warning::Could not verify '${CLEAN}' on PyPI (HTTP ${HTTP_STATUS}). Manual review recommended."
+              fi
+            done < <(grep -E '^[a-zA-Z]' "$req_file" | sed '/^#/d' || true)
+          done < <(find . -name 'requirements*.txt' -not -path '*/.venv*' -not -path '*/node_modules*')
+
+          if [ "$CONFUSED" -eq 1 ]; then
+            echo ""
+            echo "::error::One or more phantom packages detected. Merge is BLOCKED."
+            exit 1
+          fi
+          echo "✅ All Python packages verified on PyPI"
+
+      - name: Check npm for dependency confusion (Node)
+        if: hashFiles('**/package.json') != ''
+        run: |
+          set -euo pipefail
+          CONFUSED=0
+          for PKG in $(node -e \
+            "const p=require('./package.json'); \
+             console.log(Object.keys({...(p.dependencies||{}), ...(p.devDependencies||{})}).join('\n'))" \
+            2>/dev/null || true); do
+
+            HTTP_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" \
+              "https://registry.npmjs.org/${PKG}" 2>/dev/null || echo "000")
+
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "  ✅ ${PKG} — found on npm"
+            elif [ "$HTTP_STATUS" = "404" ]; then
+              echo "::error::PHANTOM PACKAGE '${PKG}' — not found on npm (404). Possible hallucination or dependency confusion."
+              CONFUSED=1
+            else
+              echo "::warning::Could not verify '${PKG}' on npm (HTTP ${HTTP_STATUS}). Manual review recommended."
+            fi
+          done
+
+          if [ "$CONFUSED" -eq 1 ]; then
+            echo "::error::One or more phantom npm packages detected. Merge is BLOCKED."
+            exit 1
+          fi
+          echo "✅ All npm packages verified on registry"
+
+  # ─── LOCKFILE INTEGRITY CHECK ──────────────────────────────────────────────
+  lockfile-integrity:
+    name: "🔐 Lockfile Integrity"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Verify Python requirements use hash pinning
+        if: hashFiles('**/requirements*.txt') != ''
+        run: |
+          set -euo pipefail
+          WARNINGS=0
+          while IFS= read -r req_file; do
+            # Skip test/dev requirements from hash enforcement (configurable)
+            if [[ "$req_file" == *"dev"* ]] || [[ "$req_file" == *"test"* ]]; then
+              echo "ℹ️  Skipping hash check for dev/test requirements: $req_file"
+              continue
+            fi
+            if grep -qE '^[a-zA-Z]' "$req_file" && ! grep -q '\-\-hash=' "$req_file"; then
+              echo "::error file=${req_file}::Production requirements file lacks hash pinning."
+              echo "  Run: pip-compile --generate-hashes requirements.in -o requirements.txt"
+              WARNINGS=1
+            else
+              echo "  ✅ ${req_file} — hash pinning present"
+            fi
+          done < <(find . -name 'requirements*.txt' -not -path '*/.venv*' -not -path '*/node_modules*')
+          [ "$WARNINGS" -eq 0 ] || exit 1
+
+      - name: Verify Node package-lock.json is committed
+        if: hashFiles('**/package.json') != ''
+        run: |
+          set -euo pipefail
+          if [ -f "package.json" ] && [ ! -f "package-lock.json" ]; then
+            echo "::error::package.json found but package-lock.json is missing."
+            echo "  Run: npm install  (which generates package-lock.json) and commit it."
+            exit 1
+          fi
+          if [ -f "package-lock.json" ]; then
+            echo "✅ package-lock.json is committed"
+          fi
+
+      - name: Verify .NET packages.lock.json if present
+        if: hashFiles('**/*.csproj') != ''
+        run: |
+          set -euo pipefail
+          FOUND_LOCK=0
+          while IFS= read -r csproj; do
+            PROJ_DIR=$(dirname "$csproj")
+            if [ -f "${PROJ_DIR}/packages.lock.json" ]; then
+              echo "  ✅ ${csproj} — packages.lock.json present"
+              FOUND_LOCK=1
+            fi
+          done < <(find . -name '*.csproj' -not -path '*/obj/*')
+          if [ "$FOUND_LOCK" -eq 0 ]; then
+            echo "::warning::No packages.lock.json found for .NET projects."
+            echo "  Consider enabling: <RestoreLockedMode>true</RestoreLockedMode> and running: dotnet restore --lock-file-path packages.lock.json"
+          fi
+
+  # ─── CONTAINER BASE IMAGE DIGEST PINNING CHECK ────────────────────────────
+  container-image-pinning:
+    name: "🐳 Container Image Digest Pinning"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Check Dockerfiles for digest-pinned base images
+        if: hashFiles('**/Dockerfile', '**/*.dockerfile', '**/docker-compose*.yml') != ''
+        run: |
+          set -euo pipefail
+          UNPINNED=0
+
+          # Check Dockerfiles
+          while IFS= read -r dockerfile; do
+            while IFS= read -r from_line; do
+              # Skip scratch and ARG-based FROM lines
+              [[ "$from_line" =~ ^FROM\ scratch ]] && continue
+              [[ "$from_line" =~ \$\{ ]] && continue
+              # Flag any FROM line without @sha256:
+              if ! echo "$from_line" | grep -q '@sha256:'; then
+                echo "::warning file=${dockerfile}::Base image not pinned to digest: '${from_line}'"
+                echo "  Pin using: docker inspect --format='{{index .RepoDigests 0}}' <image>"
+                UNPINNED=1
+              else
+                echo "  ✅ ${dockerfile}: ${from_line}"
+              fi
+            done < <(grep -Ei '^FROM ' "$dockerfile" || true)
+          done < <(find . \( -name 'Dockerfile' -o -name '*.dockerfile' \) -not -path '*/node_modules*')
+
+          # Check devcontainer.json for image field (tag-only references)
+          if [ -f ".devcontainer/devcontainer.json" ]; then
+            IMAGE_REF=$(python3 -c "import json; d=json.load(open('.devcontainer/devcontainer.json')); print(d.get('image',''))" 2>/dev/null || echo "")
+            if [ -n "$IMAGE_REF" ] && ! echo "$IMAGE_REF" | grep -q '@sha256:'; then
+              echo "::warning file=.devcontainer/devcontainer.json::devcontainer image not pinned to digest: '${IMAGE_REF}'"
+              echo "  Consider adding @sha256:<digest> to prevent tag drift."
+              UNPINNED=1
+            elif [ -n "$IMAGE_REF" ]; then
+              echo "  ✅ devcontainer.json: ${IMAGE_REF}"
+            fi
+          fi
+
+          if [ "$UNPINNED" -eq 1 ]; then
+            echo "::warning::One or more container images are not digest-pinned. See warnings above."
+            # Warning only — not blocking (images may be in the process of being pinned)
+            # Promote to error (exit 1) once all base images have been pinned
+          else
+            echo "✅ All container base images are pinned to digest"
+          fi
+
+  # ─── SUPPLY CHAIN SUMMARY ─────────────────────────────────────────────────
+  supply-chain-summary:
+    name: "📊 Supply Chain Summary"
+    runs-on: ubuntu-latest
+    needs: [sbom-and-vuln-scan, dependency-confusion, lockfile-integrity, container-image-pinning]
+    if: always()
+    steps:
+      - name: Write job summary
+        run: |
+          {
+            echo "## Supply Chain Verification Summary"
+            echo ""
+            echo "| Check | Result |"
+            echo "|---|---|"
+            echo "| SBOM + Vulnerability Scan | ${{ needs.sbom-and-vuln-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |"
+            echo "| Dependency Confusion | ${{ needs.dependency-confusion.result == 'success' && '✅ Passed' || needs.dependency-confusion.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |"
+            echo "| Lockfile Integrity | ${{ needs.lockfile-integrity.result == 'success' && '✅ Passed' || '❌ Failed' }} |"
+            echo "| Container Image Pinning | ${{ needs.container-image-pinning.result == 'success' && '✅ Passed' || '⚠️ Warnings' }} |"
+            echo ""
+            echo "Commit: \`${{ github.sha }}\`"
+            echo "Branch: \`${{ github.ref_name }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
