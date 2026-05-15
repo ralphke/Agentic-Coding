@@ -30,7 +30,7 @@
     "ghcr.io/helpers4/devcontainer/github-dev:1": {},
     "./features/workshop-tools": {}
   },
-  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postCreateCommand": "cd ${containerWorkspaceFolder} && ([ -x /bin/bash ] && /bin/bash .devcontainer/post-create.sh || /bin/sh .devcontainer/post-create.sh)",
   "remoteEnv": {
     "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin:/home/vscode/.dotnet/tools:/home/vscode/.aspire/bin"
   },

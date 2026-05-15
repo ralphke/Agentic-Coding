@@ -2,7 +2,10 @@
 # post-create.sh — runs once when the devcontainer is first created.
 # Performs workspace-specific setup only.
 
-set -uo pipefail
+set -u
+if (set -o pipefail) >/dev/null 2>&1; then
+  set -o pipefail
+fi
 
 echo "=== Post-create: Agentic Coding Workshop ==="
 
