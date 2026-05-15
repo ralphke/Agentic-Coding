@@ -16,7 +16,9 @@ jobs:
 
     steps:
       # Phase 1 — fetch only the manifest file from agentic-shared (no full clone).
-      # AGENTIC_SHARED_TOKEN: PAT with read access to agentic-shared.
+      # Clones into /tmp (outside GITHUB_WORKSPACE) so the temp dir never appears
+      # as an untracked path inside the Agentic-Coding working tree.
+      # AGENTIC_SHARED_TOKEN: PAT with Contents:Read on agentic-shared.
       # Required when private; when public the token-less fallback is used.
       - name: Fetch manifest from agentic-shared (sparse)
         env:
@@ -26,8 +28,8 @@ jobs:
           [[ -n "$AGENTIC_SHARED_TOKEN" ]] && AUTH="x-access-token:${AGENTIC_SHARED_TOKEN}@"
           git clone --depth=1 --filter=blob:none --no-checkout \
             "https://${AUTH}github.com/ralphke/agentic-shared.git" \
-            .tmp/agentic-shared
-          cd .tmp/agentic-shared
+            /tmp/agentic-shared
+          cd /tmp/agentic-shared
           git sparse-checkout init --cone
           git sparse-checkout set manifests
           git checkout
@@ -39,7 +41,7 @@ jobs:
           AGENTIC_SHARED_TOKEN: ${{ secrets.AGENTIC_SHARED_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          MANIFEST=".tmp/agentic-shared/manifests/agentic-coding.txt"
+          MANIFEST="/tmp/agentic-shared/manifests/agentic-coding.txt"
           [[ ! -f "$MANIFEST" ]] && { echo "::error::Manifest not found: $MANIFEST"; exit 1; }
 
           # Derive the unique top-level directories referenced by the manifest.
@@ -48,7 +50,7 @@ jobs:
           echo "Manifest directories: ${DIRS[*]}"
 
           # Expand agentic-shared sparse checkout to all manifest files.
-          cd .tmp/agentic-shared
+          cd /tmp/agentic-shared
           git sparse-checkout set manifests "${DIRS[@]}"
           git checkout
           cd "$GITHUB_WORKSPACE"
@@ -65,10 +67,10 @@ jobs:
       # Phase 3 — copy each manifest file from agentic-shared into this repo.
       - name: Copy manifest files into Agentic-Coding
         run: |
-          MANIFEST=".tmp/agentic-shared/manifests/agentic-coding.txt"
+          MANIFEST="/tmp/agentic-shared/manifests/agentic-coding.txt"
           while IFS= read -r file || [[ -n "$file" ]]; do
             [[ -z "$file" || "$file" =~ ^# ]] && continue
-            src=".tmp/agentic-shared/${file}"
+            src="/tmp/agentic-shared/${file}"
             dst="${file}"
             if [[ ! -e "$src" ]]; then
               echo "::warning::Not found in agentic-shared: $file"
@@ -79,7 +81,20 @@ jobs:
             echo "  ✅ $file"
           done < "$MANIFEST"
 
+      # Guard — skip PR creation when repos are already in sync.
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet HEAD 2>/dev/null && git diff --cached --quiet HEAD 2>/dev/null; then
+            echo "detected=false" >> "$GITHUB_OUTPUT"
+            echo "No changes — repos are already in sync."
+          else
+            echo "detected=true" >> "$GITHUB_OUTPUT"
+            echo "Changes detected — will open a sync PR."
+          fi
+
       - name: Create sync pull request
+        if: steps.changes.outputs.detected == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
