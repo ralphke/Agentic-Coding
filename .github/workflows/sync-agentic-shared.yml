@@ -20,11 +20,22 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Checkout agentic-shared
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-        with:
-          repository: ralphke/agentic-shared
-          path: .tmp/agentic-shared
+      # AGENTIC_SHARED_TOKEN must be a PAT with read access to agentic-shared.
+      # Required when the repo is private; optional (but still works) when public.
+      - name: Clone agentic-shared
+        env:
+          AGENTIC_SHARED_TOKEN: ${{ secrets.AGENTIC_SHARED_TOKEN }}
+        run: |
+          if [[ -n "$AGENTIC_SHARED_TOKEN" ]]; then
+            git clone --depth=1 \
+              "https://x-access-token:${AGENTIC_SHARED_TOKEN}@github.com/ralphke/agentic-shared.git" \
+              .tmp/agentic-shared
+          else
+            # Fallback: works for public repos without a token
+            git clone --depth=1 \
+              https://github.com/ralphke/agentic-shared.git \
+              .tmp/agentic-shared
+          fi
 
       # The manifest in agentic-shared is the single source of truth for which
       # files are synced into this repo. No changes to this workflow are needed
