@@ -57,12 +57,35 @@ jobs:
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" \
             image --severity HIGH,CRITICAL --exit-code 1 --no-progress "${{ steps.image_ref.outputs.devcontainer_image }}"
 
+      - name: Detect code scanning availability
+        id: code_scanning
+        run: |
+          STATUS=$(curl -sS -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/code-scanning/default-setup")
+
+          if [ "$STATUS" = "200" ] || [ "$STATUS" = "204" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Upload Trivy image results
-        if: always() && hashFiles('trivy-image-fast.sarif') != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+        if: always() && steps.code_scanning.outputs.enabled == 'true' && hashFiles('trivy-image-fast.sarif') != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-image-fast.sarif
           category: trivy-devcontainer-image
+
+      - name: Note skipped code scanning upload (fast)
+        if: always() && steps.code_scanning.outputs.enabled != 'true'
+        run: |
+          {
+            echo "Code scanning upload skipped for fast scan."
+            echo "Code scanning is not enabled or not accessible for this run context."
+            echo "Enable Code Scanning in repository settings to upload SARIF results."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Add fast scan summary
         if: always()
@@ -114,8 +137,22 @@ jobs:
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/work" "$TRIVY_IMAGE" \
             image --severity HIGH,CRITICAL --format sarif --output /work/trivy-deep-image.sarif --exit-code 0 --no-progress "${{ steps.image_ref.outputs.devcontainer_image }}"
 
+      - name: Detect code scanning availability
+        id: code_scanning
+        run: |
+          STATUS=$(curl -sS -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/code-scanning/default-setup")
+
+          if [ "$STATUS" = "200" ] || [ "$STATUS" = "204" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Upload deep image results
-        if: always() && hashFiles('trivy-deep-image.sarif') != ''
+        if: always() && steps.code_scanning.outputs.enabled == 'true' && hashFiles('trivy-deep-image.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-deep-image.sarif
@@ -127,11 +164,20 @@ jobs:
             fs --severity HIGH,CRITICAL --scanners vuln,config --format sarif --output /repo/trivy-deep-fs.sarif --exit-code 0 --no-progress /repo
 
       - name: Upload deep filesystem results
-        if: always() && hashFiles('trivy-deep-fs.sarif') != ''
+        if: always() && steps.code_scanning.outputs.enabled == 'true' && hashFiles('trivy-deep-fs.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-deep-fs.sarif
           category: trivy-devcontainer-deep-fs
+
+      - name: Note skipped code scanning upload (deep)
+        if: always() && steps.code_scanning.outputs.enabled != 'true'
+        run: |
+          {
+            echo "Code scanning upload skipped for deep scan."
+            echo "Code scanning is not enabled or not accessible for this run context."
+            echo "Enable Code Scanning in repository settings to upload SARIF results."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Add deep scan summary
         if: always()
