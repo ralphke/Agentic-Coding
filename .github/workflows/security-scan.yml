@@ -39,6 +39,7 @@ jobs:
       - name: Run Docker Scout CVE scan
         uses: docker/scout-action@v1
         with:
+          command: cves
           image: agentic-workshop:latest
           format: sarif
           output: scout-results.sarif
