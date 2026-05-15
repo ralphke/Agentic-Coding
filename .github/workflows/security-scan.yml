@@ -40,14 +40,10 @@ jobs:
           docker image inspect "$IMAGE_NAME" >/dev/null
           echo "image_name=$IMAGE_NAME" >> "$GITHUB_OUTPUT"
 
-      - name: Run Trivy image scan (HIGH/CRITICAL gate)
-        uses: aquasecurity/trivy-action@v0.28.0
-        with:
-          image-ref: ${{ steps.resolve_image.outputs.image_name }}
-          format: sarif
-          output: trivy-image-fast.sarif
-          severity: 'CRITICAL,HIGH'
-          exit-code: '0'
+      - name: Generate Trivy image SARIF (fast)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/work" "$TRIVY_IMAGE" \
+            image --severity HIGH,CRITICAL --format sarif --output /work/trivy-image-fast.sarif --exit-code 0 --no-progress "${{ steps.resolve_image.outputs.image_name }}"
 
       - name: Enforce HIGH/CRITICAL gate (image)
         run: |
@@ -103,13 +99,10 @@ jobs:
           docker image inspect "$IMAGE_NAME" >/dev/null
           echo "image_name=$IMAGE_NAME" >> "$GITHUB_OUTPUT"
 
-      - name: Trivy deep image scan (report)
-        uses: aquasecurity/trivy-action@v0.28.0
-        with:
-          image-ref: ${{ steps.resolve_image.outputs.image_name }}
-          format: sarif
-          output: trivy-deep-image.sarif
-          severity: 'CRITICAL,HIGH'
+      - name: Generate Trivy deep image SARIF (report)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/work" "$TRIVY_IMAGE" \
+            image --severity HIGH,CRITICAL --format sarif --output /work/trivy-deep-image.sarif --exit-code 0 --no-progress "${{ steps.resolve_image.outputs.image_name }}"
 
       - name: Upload deep image results
         if: always() && hashFiles('trivy-deep-image.sarif') != ''
@@ -118,15 +111,10 @@ jobs:
           sarif_file: trivy-deep-image.sarif
           category: trivy-devcontainer-deep-image
 
-      - name: Trivy deep filesystem scan (repo)
-        uses: aquasecurity/trivy-action@v0.28.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          format: sarif
-          output: trivy-deep-fs.sarif
-          severity: 'CRITICAL,HIGH'
-          scanners: 'vuln,config'
+      - name: Generate Trivy deep filesystem SARIF (repo)
+        run: |
+          docker run --rm -v "$PWD:/repo" "$TRIVY_IMAGE" \
+            fs --severity HIGH,CRITICAL --scanners vuln,config --format sarif --output /repo/trivy-deep-fs.sarif --exit-code 0 --no-progress /repo
 
       - name: Upload deep filesystem results
         if: always() && hashFiles('trivy-deep-fs.sarif') != ''
