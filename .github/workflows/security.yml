@@ -98,16 +98,24 @@ jobs:
           path: sbom.cyclonedx.json
           retention-days: 90
 
-      # --update-db forces Grype to refresh its vulnerability database before
-      # scanning; without it the bundled DB ages past the 5-day max and the
-      # scan exits with an error instead of running.
+      # The DB bundled in the grype image ages quickly (max allowed age: 5 days).
+      # Refresh it via `grype db update` into a host-mounted cache directory
+      # before running any scan so all subsequent docker runs share a fresh DB.
+      - name: Update Grype vulnerability database
+        run: |
+          mkdir -p "$PWD/.grype-db"
+          docker run --rm \
+            -v "$PWD/.grype-db:/root/.cache/grype/db" \
+            anchore/grype:v0.78.0 db update
+          echo "✅ Grype vulnerability database updated"
+
       - name: Vulnerability scan (grype) — BLOCKING on HIGH+
         run: |
           docker run --rm \
             -v "$PWD:/src" \
+            -v "$PWD/.grype-db:/root/.cache/grype/db" \
             anchore/grype:v0.78.0 \
             sbom:/src/sbom.cyclonedx.json \
-            --update-db \
             --fail-on high \
             --output json \
             --file /src/grype-report.json
@@ -126,9 +134,9 @@ jobs:
         run: |
           docker run --rm \
             -v "$PWD:/src" \
+            -v "$PWD/.grype-db:/root/.cache/grype/db" \
             anchore/grype:v0.78.0 \
             sbom:/src/sbom.cyclonedx.json \
-            --update-db \
             --output sarif \
             --file /src/grype-results.sarif || true
 
