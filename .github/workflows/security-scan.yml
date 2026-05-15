@@ -23,6 +23,7 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: read
       packages: read
       security-events: write
@@ -57,8 +58,8 @@ jobs:
             image --severity HIGH,CRITICAL --exit-code 1 --no-progress "${{ steps.image_ref.outputs.devcontainer_image }}"
 
       - name: Upload Trivy image results
-        if: always() && hashFiles('trivy-image-fast.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
+        if: always() && hashFiles('trivy-image-fast.sarif') != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-image-fast.sarif
           category: trivy-devcontainer-image
@@ -84,6 +85,7 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: read
       packages: read
       security-events: write
@@ -114,7 +116,7 @@ jobs:
 
       - name: Upload deep image results
         if: always() && hashFiles('trivy-deep-image.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-deep-image.sarif
           category: trivy-devcontainer-deep-image
@@ -126,7 +128,7 @@ jobs:
 
       - name: Upload deep filesystem results
         if: always() && hashFiles('trivy-deep-fs.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-deep-fs.sarif
           category: trivy-devcontainer-deep-fs
