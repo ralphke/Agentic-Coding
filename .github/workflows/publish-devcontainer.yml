@@ -12,8 +12,7 @@ permissions:
   packages: write
 
 env:
-  # ghcr.io owner must be lowercase; hardcoded to avoid case issues with github.repository
-  DEVCONTAINER_IMAGE: ghcr.io/ralphke/agentic-coding-devcontainer
+  DEVCONTAINER_IMAGE_NAME: agentic-coding-devcontainer
 
 jobs:
   build-and-push:
@@ -23,6 +22,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
+      - name: Resolve GHCR image reference
+        id: image_ref
+        run: |
+          GHCR_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "devcontainer_image=ghcr.io/${GHCR_OWNER}/${DEVCONTAINER_IMAGE_NAME}" >> "$GITHUB_OUTPUT"
+
       - name: Log in to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
@@ -31,10 +36,10 @@ jobs:
 
       - name: Tag and push to GHCR
         run: |
-          docker tag agentic-coding-image:latest "${DEVCONTAINER_IMAGE}:latest"
-          docker tag agentic-coding-image:latest "${DEVCONTAINER_IMAGE}:${{ github.sha }}"
-          docker push "${DEVCONTAINER_IMAGE}:latest"
-          docker push "${DEVCONTAINER_IMAGE}:${{ github.sha }}"
+          docker tag agentic-coding-image:latest "${{ steps.image_ref.outputs.devcontainer_image }}:latest"
+          docker tag agentic-coding-image:latest "${{ steps.image_ref.outputs.devcontainer_image }}:${{ github.sha }}"
+          docker push "${{ steps.image_ref.outputs.devcontainer_image }}:latest"
+          docker push "${{ steps.image_ref.outputs.devcontainer_image }}:${{ github.sha }}"
 
       - name: Add publish summary
         run: |
@@ -43,6 +48,6 @@ jobs:
             echo ""
             echo "| Tag | Value |"
             echo "|---|---|"
-            echo "| latest | \`${DEVCONTAINER_IMAGE}:latest\` |"
-            echo "| sha | \`${DEVCONTAINER_IMAGE}:${{ github.sha }}\` |"
+            echo "| latest | \`${{ steps.image_ref.outputs.devcontainer_image }}:latest\` |"
+            echo "| sha | \`${{ steps.image_ref.outputs.devcontainer_image }}:${{ github.sha }}\` |"
           } >> "$GITHUB_STEP_SUMMARY"

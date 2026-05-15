@@ -16,8 +16,7 @@ on:
 
 env:
   TRIVY_IMAGE: aquasec/trivy:0.54.1
-  # ghcr.io owner must be lowercase; hardcoded to avoid case issues with github.repository
-  DEVCONTAINER_IMAGE: ghcr.io/ralphke/agentic-coding-devcontainer:latest
+  DEVCONTAINER_IMAGE_NAME: agentic-coding-devcontainer
 
 jobs:
   trivy-image-fast:
@@ -25,26 +24,37 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      packages: read
       security-events: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
-      - name: Pull devcontainer image from GHCR
+      - name: Resolve GHCR image reference
+        id: image_ref
+        run: |
+          GHCR_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "devcontainer_image=ghcr.io/${GHCR_OWNER}/${DEVCONTAINER_IMAGE_NAME}:latest" >> "$GITHUB_OUTPUT"
+
+      - name: Pull devcontainer image from GHCR (fallback to local build)
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-          docker pull "$DEVCONTAINER_IMAGE"
+          if ! docker pull "${{ steps.image_ref.outputs.devcontainer_image }}"; then
+            echo "GHCR pull unavailable; building local devcontainer image as fallback"
+            docker compose -f .devcontainer/docker-compose.yml build agentic-coding
+            docker tag agentic-coding-image:latest "${{ steps.image_ref.outputs.devcontainer_image }}"
+          fi
 
       - name: Generate Trivy image SARIF (fast)
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/work" "$TRIVY_IMAGE" \
-            image --severity HIGH,CRITICAL --format sarif --output /work/trivy-image-fast.sarif --exit-code 0 --no-progress "$DEVCONTAINER_IMAGE"
+            image --severity HIGH,CRITICAL --format sarif --output /work/trivy-image-fast.sarif --exit-code 0 --no-progress "${{ steps.image_ref.outputs.devcontainer_image }}"
 
       - name: Enforce HIGH/CRITICAL gate (image)
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" \
-            image --severity HIGH,CRITICAL --exit-code 1 --no-progress "$DEVCONTAINER_IMAGE"
+            image --severity HIGH,CRITICAL --exit-code 1 --no-progress "${{ steps.image_ref.outputs.devcontainer_image }}"
 
       - name: Upload Trivy image results
         if: always() && hashFiles('trivy-image-fast.sarif') != ''
@@ -57,7 +67,7 @@ jobs:
         if: always()
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" \
-            image --severity HIGH,CRITICAL --format json "$DEVCONTAINER_IMAGE" > trivy-image-fast.json
+            image --severity HIGH,CRITICAL --format json "${{ steps.image_ref.outputs.devcontainer_image }}" > trivy-image-fast.json
 
           HIGH_COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length' trivy-image-fast.json)
           CRITICAL_COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' trivy-image-fast.json)
@@ -67,7 +77,7 @@ jobs:
             echo ""
             echo "| Scan | High | Critical |"
             echo "|---|---:|---:|"
-            echo "| Image ($DEVCONTAINER_IMAGE) | ${HIGH_COUNT} | ${CRITICAL_COUNT} |"
+            echo "| Image (${{ steps.image_ref.outputs.devcontainer_image }}) | ${HIGH_COUNT} | ${CRITICAL_COUNT} |"
           } >> "$GITHUB_STEP_SUMMARY"
 
   trivy-deep-weekly:
@@ -75,21 +85,32 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      packages: read
       security-events: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
-      - name: Pull devcontainer image from GHCR
+      - name: Resolve GHCR image reference
+        id: image_ref
+        run: |
+          GHCR_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "devcontainer_image=ghcr.io/${GHCR_OWNER}/${DEVCONTAINER_IMAGE_NAME}:latest" >> "$GITHUB_OUTPUT"
+
+      - name: Pull devcontainer image from GHCR (fallback to local build)
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-          docker pull "$DEVCONTAINER_IMAGE"
+          if ! docker pull "${{ steps.image_ref.outputs.devcontainer_image }}"; then
+            echo "GHCR pull unavailable; building local devcontainer image as fallback"
+            docker compose -f .devcontainer/docker-compose.yml build agentic-coding
+            docker tag agentic-coding-image:latest "${{ steps.image_ref.outputs.devcontainer_image }}"
+          fi
 
       - name: Generate Trivy deep image SARIF (report)
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/work" "$TRIVY_IMAGE" \
-            image --severity HIGH,CRITICAL --format sarif --output /work/trivy-deep-image.sarif --exit-code 0 --no-progress "$DEVCONTAINER_IMAGE"
+            image --severity HIGH,CRITICAL --format sarif --output /work/trivy-deep-image.sarif --exit-code 0 --no-progress "${{ steps.image_ref.outputs.devcontainer_image }}"
 
       - name: Upload deep image results
         if: always() && hashFiles('trivy-deep-image.sarif') != ''
@@ -114,7 +135,7 @@ jobs:
         if: always()
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/repo" "$TRIVY_IMAGE" \
-            image --severity HIGH,CRITICAL --format json "$DEVCONTAINER_IMAGE" > trivy-deep-image.json
+            image --severity HIGH,CRITICAL --format json "${{ steps.image_ref.outputs.devcontainer_image }}" > trivy-deep-image.json
 
           docker run --rm -v "$PWD:/repo" "$TRIVY_IMAGE" \
             fs --severity HIGH,CRITICAL --format json /repo > trivy-deep-fs.json
@@ -129,6 +150,6 @@ jobs:
             echo ""
             echo "| Scan | High | Critical |"
             echo "|---|---:|---:|"
-            echo "| Image ($DEVCONTAINER_IMAGE) | ${IMG_HIGH} | ${IMG_CRITICAL} |"
+            echo "| Image (${{ steps.image_ref.outputs.devcontainer_image }}) | ${IMG_HIGH} | ${IMG_CRITICAL} |"
             echo "| Filesystem (repo) | ${FS_HIGH} | ${FS_CRITICAL} |"
           } >> "$GITHUB_STEP_SUMMARY"
