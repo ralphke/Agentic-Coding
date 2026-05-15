@@ -60,7 +60,7 @@ else
   warn ".venv-linux not found (run post-create or rebuild container)"
 fi
 
-if [[ -f src/requirements.txt ]] && [[ -x .venv-linux/bin/python3 ]]; then
+if [[ -f src/requirements-dev.txt ]] && [[ -x .venv-linux/bin/python3 ]]; then
   if .venv-linux/bin/python3 -m pip check >/dev/null 2>&1; then
     pass "pip dependency check passed in .venv-linux"
   else

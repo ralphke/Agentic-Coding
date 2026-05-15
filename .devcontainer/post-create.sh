@@ -27,7 +27,7 @@ if [ -n "$PYTHON314" ]; then
   echo "Upgrading pip in .venv-linux..."
   "$VENV_DIR/bin/pip" install --upgrade pip --quiet || echo "⚠ pip upgrade in venv failed"
   echo "Installing Python requirements into .venv-linux..."
-  "$VENV_DIR/bin/pip" install -r "$REPO_ROOT/src/requirements.txt" --quiet || echo "⚠ requirements install in venv failed"
+  "$VENV_DIR/bin/pip" install -r "$REPO_ROOT/src/requirements-dev.txt" --quiet || echo "⚠ requirements install in venv failed"
   echo "✓ .venv-linux ready. Activate with: source .venv-linux/bin/activate"
 else
   echo "⚠ python3.14 not found — skipping .venv-linux creation"
