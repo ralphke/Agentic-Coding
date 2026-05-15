@@ -18,13 +18,15 @@ jobs:
   trivy-image-fast:
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    env:
+      TRIVY_IMAGE: aquasec/trivy:0.54.1
     permissions:
       contents: read
       security-events: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Build devcontainer image via Compose
         id: resolve_image
@@ -39,17 +41,22 @@ jobs:
           echo "image_name=$IMAGE_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Run Trivy image scan (HIGH/CRITICAL gate)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.28.0
         with:
           image-ref: ${{ steps.resolve_image.outputs.image_name }}
           format: sarif
           output: trivy-image-fast.sarif
           severity: 'CRITICAL,HIGH'
-          exit-code: '1'
+          exit-code: '0'
+
+      - name: Enforce HIGH/CRITICAL gate (image)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" \
+            image --severity HIGH,CRITICAL --exit-code 1 --no-progress "${{ steps.resolve_image.outputs.image_name }}"
 
       - name: Upload Trivy image results
-        if: always()
-        uses: github/codeql-action/upload-sarif@v2
+        if: always() && hashFiles('trivy-image-fast.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-image-fast.sarif
           category: trivy-devcontainer-image
@@ -57,7 +64,7 @@ jobs:
       - name: Add fast scan summary
         if: always()
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest \
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" \
             image --severity HIGH,CRITICAL --format json "${{ steps.resolve_image.outputs.image_name }}" > trivy-image-fast.json
 
           HIGH_COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length' trivy-image-fast.json)
@@ -74,13 +81,15 @@ jobs:
   trivy-deep-weekly:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    env:
+      TRIVY_IMAGE: aquasec/trivy:0.54.1
     permissions:
       contents: read
       security-events: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Build devcontainer image via Compose
         id: resolve_image
@@ -95,7 +104,7 @@ jobs:
           echo "image_name=$IMAGE_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Trivy deep image scan (report)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.28.0
         with:
           image-ref: ${{ steps.resolve_image.outputs.image_name }}
           format: sarif
@@ -103,14 +112,14 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Upload deep image results
-        if: always()
-        uses: github/codeql-action/upload-sarif@v2
+        if: always() && hashFiles('trivy-deep-image.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-deep-image.sarif
           category: trivy-devcontainer-deep-image
 
       - name: Trivy deep filesystem scan (repo)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.28.0
         with:
           scan-type: fs
           scan-ref: .
@@ -120,8 +129,8 @@ jobs:
           scanners: 'vuln,config'
 
       - name: Upload deep filesystem results
-        if: always()
-        uses: github/codeql-action/upload-sarif@v2
+        if: always() && hashFiles('trivy-deep-fs.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-deep-fs.sarif
           category: trivy-devcontainer-deep-fs
@@ -129,10 +138,10 @@ jobs:
       - name: Add deep scan summary
         if: always()
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/repo" aquasec/trivy:latest \
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/repo" "$TRIVY_IMAGE" \
             image --severity HIGH,CRITICAL --format json "${{ steps.resolve_image.outputs.image_name }}" > trivy-deep-image.json
 
-          docker run --rm -v "$PWD:/repo" aquasec/trivy:latest \
+          docker run --rm -v "$PWD:/repo" "$TRIVY_IMAGE" \
             fs --severity HIGH,CRITICAL --format json /repo > trivy-deep-fs.json
 
           IMG_HIGH=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length' trivy-deep-image.json)
