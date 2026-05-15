@@ -33,8 +33,8 @@ jobs:
             agentic-workshop:latest
             agentic-workshop:${{ github.sha }}
           load: true
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
       
       - name: Run Docker Scout CVE scan
         uses: docker/scout-action@v1

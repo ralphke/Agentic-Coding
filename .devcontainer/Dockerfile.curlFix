@@ -1,0 +1,20 @@
+FROM buildpack-deps:25.10-curl
+# docker compose -f docker-compose.yml build 2>&1
+# Fix system-level vulnerabilities
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y --only-upgrade linux-image-generic && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Update Golang if present in the build
+RUN if command -v go &> /dev/null; then \
+    echo "Go detected - consider upgrading from $(go version)" && \
+    apt-get update && \
+    apt-get install -y golang-1.22 && \
+    update-alternatives --install /usr/bin/go go /usr/lib/go-1.22/bin/go 100 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*; \
+    fi
+
+USER root
