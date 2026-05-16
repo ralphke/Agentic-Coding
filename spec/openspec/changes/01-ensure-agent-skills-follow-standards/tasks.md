@@ -24,7 +24,7 @@
 
 - [ ] T06 — Add reusable evaluation scripts in `scripts/` using allowed tooling constraints.
 - [ ] T07 — Add evaluation tests in `test/` and produce before/after summary output.
-- [ ] T08 — Confirm measurable improvement and target at least 5% relative gain where measurable.
+- [ ] T08 — Confirm measurable improvement and target at least 5% relative gain using these metrics: instruction completeness score, ambiguous-instruction count (inverse), and checklist coverage score.
 
 ## Phase 4 — Validation
 

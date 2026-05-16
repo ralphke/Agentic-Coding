@@ -15,6 +15,7 @@ Skill definitions in `.github/skills/` should be consistent with Agent Skills sp
 ## Scope
 
 - Evaluate existing skill files in `.github/skills/` against agentskills.io specification and best-practice guidance.
+- Targeted skills in scope: `idea-to-spec.md`, `spec-to-design.md`, `test-generation.md`, `security-review.md`, `pr-review.md`, `deploy-pipeline.md`.
 - Update skill descriptions and structure to improve clarity, actionability, and optimization quality.
 - Keep scope focused on `.github` skill-related assets plus supporting `scripts/` and `test/` artifacts for measurable evaluation.
 - Define baseline vs post-change evaluation and summary reporting.
@@ -28,6 +29,13 @@ Skill definitions in `.github/skills/` should be consistent with Agent Skills sp
 ## Approach
 
 Create a standards checklist mapped to agentskills.io references, then apply targeted edits to skill documents. Add reusable evaluation scripts in `scripts/` and corresponding tests in `test/` to compare baseline prompts (without skills) against improved prompts (with updated skills). Implementation is blocked until this proposal is reviewed and accepted by @ralphke.
+
+### Standards Snapshot (local checklist source)
+
+- Required structure per skill: purpose, trigger/when-to-use, ordered execution steps, quality checks, and expected output.
+- Description quality goals: concise intent, explicit scope boundaries, concrete actions, and low-ambiguity wording.
+- Optimization goals: reduce vague phrasing, tighten stage handoffs, and improve consistency with repository SDLC labels.
+- External references remain authoritative, but this snapshot is the minimum local rubric if external links are unavailable.
 
 ## Scenarios
 
@@ -51,9 +59,9 @@ Create a standards checklist mapped to agentskills.io references, then apply tar
 
 ## Acceptance Criteria
 
-- [ ] All targeted skills follow best practices from https://agentskills.io/skill-creation/best-practices.
-- [ ] All targeted skills apply optimization guidance from https://agentskills.io/skill-creation/optimizing-descriptions.
-- [ ] Validation shows measurable quality improvements against baseline without skills.
+- [ ] All in-scope skills (`idea-to-spec`, `spec-to-design`, `test-generation`, `security-review`, `pr-review`, `deploy-pipeline`) follow best practices from https://agentskills.io/skill-creation/best-practices.
+- [ ] All in-scope skills apply optimization guidance from https://agentskills.io/skill-creation/optimizing-descriptions.
+- [ ] Validation shows measurable quality improvements against baseline without skills using defined metrics (instruction completeness, ambiguity reduction, and checklist coverage).
 - [ ] Reusable script code is placed in `scripts/` using the allowed tooling priorities.
 - [ ] Evaluation tests are placed in `test/` and demonstrate at least 5% relative improvement where measurable.
 - [ ] @ralphke approves this proposal before implementation tasks are executed.
