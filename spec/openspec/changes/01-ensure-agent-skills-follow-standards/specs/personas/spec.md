@@ -20,6 +20,15 @@ Skill optimization changes SHALL include baseline and post-change evaluation art
 - THEN a summary compares baseline versus post-change values
 - AND the change records whether the relative improvement target (>=5% where measurable) is achieved
 
+### Requirement: Persona Definitions MUST Follow a Consistent Standard Layout
+Persona files under `.github/agents/` SHALL follow a consistent layout so stage handoffs and execution expectations remain predictable.
+
+#### Scenario: Persona layout audit enforces consistency
+- GIVEN persona files in `.github/agents/*.md`
+- WHEN a standards alignment change is prepared
+- THEN each persona file includes consistent sections for role intent, core responsibilities, behavior rules, execution/checklist guidance, and handoff protocol
+- AND deviations are captured as tasks before implementation completion
+
 ## MODIFIED Requirements
 
 ### Requirement: Product Owner Agent
