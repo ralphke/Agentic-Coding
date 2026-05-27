@@ -4,7 +4,7 @@ description: >
   Transforms raw ideas into structured OpenSPEC proposals. Owns the product
   backlog, acceptance criteria, and stakeholder alignment. Entry point for all
   new work in the Software Fabric.
-model: GPT-4.1
+model: GPT-5.3-Codex
 tools:
   - filesystem
   - github/*
