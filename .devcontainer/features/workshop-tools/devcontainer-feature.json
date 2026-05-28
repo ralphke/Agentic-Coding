@@ -7,5 +7,21 @@
     "installsAfter": [
         "ghcr.io/devcontainers/features/dotnet"
     ],
-    "options": {}
+    "options": {
+        "installDab": {
+            "type": "boolean",
+            "default": true,
+            "description": "Install Microsoft Data API Builder as a .NET global tool."
+        },
+        "installAspire": {
+            "type": "boolean",
+            "default": true,
+            "description": "Install the Aspire CLI for .NET Aspire development."
+        },
+        "installCopilot": {
+            "type": "boolean",
+            "default": true,
+            "description": "Install the GitHub Copilot CLI."
+        }
+    }
 }

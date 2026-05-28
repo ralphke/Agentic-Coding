@@ -28,7 +28,11 @@
       "version": "latest"
     },
     "ghcr.io/helpers4/devcontainer/github-dev:1": {},
-    "./features/workshop-tools": {}
+    "./features/workshop-tools": {
+      "installDab": true,
+      "installAspire": true,
+      "installCopilot": true
+    }
   },
   "postCreateCommand": "cd ${containerWorkspaceFolder} && ([ -x /bin/bash ] && /bin/bash .devcontainer/post-create.sh || /bin/sh .devcontainer/post-create.sh)",
   "remoteEnv": {

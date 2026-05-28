@@ -3,11 +3,13 @@
 Builds or starts the devcontainer using a selected Dockerfile target.
 
 .DESCRIPTION
+This script is an optional manual helper. The primary VS Code devcontainer entrypoint
+is .devcontainer/devcontainer.json, so prefer that path for normal use.
 Sets DOCKERFILE_TARGET for the current process, runs docker compose with
 .devcontainer/docker-compose.yml, and restores the previous environment value.
 
 .PARAMETER Target
-Predefined Dockerfile target: security-fix, curl-fix, or custom.
+Predefined Dockerfile target: security-fix or custom.
 
 .PARAMETER CustomDockerfile
 Dockerfile name or path used when -Target custom is selected.
@@ -22,13 +24,10 @@ Adds '--no-cache' to the compose command.
 pwsh -ExecutionPolicy Bypass -File .devcontainer/build-with-dockerfile.ps1 -Target security-fix
 
 .EXAMPLE
-pwsh -ExecutionPolicy Bypass -File .devcontainer/build-with-dockerfile.ps1 -Target curl-fix -NoCache
-
-.EXAMPLE
 pwsh -ExecutionPolicy Bypass -File .devcontainer/build-with-dockerfile.ps1 -Target custom -CustomDockerfile Dockerfile.security-fix -Up
 #>
 param(
-    [ValidateSet("security-fix", "curl-fix", "custom")]
+    [ValidateSet("security-fix", "custom")]
     [string]$Target = "security-fix",
     [string]$CustomDockerfile,
     [switch]$Up,
@@ -45,7 +44,6 @@ if (-not (Test-Path -LiteralPath $composePath)) {
 
 switch ($Target) {
     "security-fix" { $dockerfile = "Dockerfile.security-fix" }
-    "curl-fix" { $dockerfile = "Dockerfile.curlFix" }
     "custom" {
         if ([string]::IsNullOrWhiteSpace($CustomDockerfile)) {
             Write-Error "When Target is 'custom', provide -CustomDockerfile with a Dockerfile name or path."

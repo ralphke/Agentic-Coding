@@ -149,6 +149,15 @@ Workshop-specific labs, documentation, and environment setup remain owned locall
 - spec: optional specification for exercises.
 - test: optional validation tests for exercises.
 
+## Devcontainer vs manual Docker build
+
+This repository uses `.devcontainer/devcontainer.json` as the primary VS Code container definition for the normal workshop workflow.
+
+- `devcontainer.json` is the source of truth for VS Code devcontainer opens and rebuilds.
+- `.devcontainer/docker-compose.yml` and `.devcontainer/Dockerfile.security-fix` are optional manual build helpers.
+- The manual compose path is aligned to the same base image as `devcontainer.json`; keep `Dockerfile.security-fix` updated if the devcontainer base image changes.
+- Prefer the `devcontainer.json` path unless you explicitly need a custom Docker compose build.
+
 ## Prerequisites
 
 > **Primary IDE for this workshop:** [VS Code Agents application](https://code.visualstudio.com/docs/copilot/agents-app) (bundled with VS Code Insiders). See **doc/setup.md** for installation and sign-in instructions before starting any lab.

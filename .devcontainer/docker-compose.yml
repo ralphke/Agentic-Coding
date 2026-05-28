@@ -1,3 +1,7 @@
+# Optional manual build path. VS Code uses devcontainer.json as the source of truth.
+# This compose file is only needed for manual Docker builds, not for normal container reopen.
+# It uses the same base image as devcontainer.json and the single manual Dockerfile: Dockerfile.security-fix.
+# If devcontainer.json changes its base image, keep Dockerfile.security-fix aligned.
 # invoked by: docker compose -f docker-compose.yml build 2>&1 | tail -50
 services:
   agentic-coding:
