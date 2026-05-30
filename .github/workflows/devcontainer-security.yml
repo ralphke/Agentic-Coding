@@ -1,0 +1,203 @@
+name: DevContainer Security
+
+# DevContainer security workflow — runs only after a devcontainer image is published.
+#
+# Triggers:
+#   - workflow_run after Publish DevContainer Image completes successfully
+#   - manual workflow_dispatch for fast or deep image scans
+
+on:
+  workflow_run:
+    workflows:
+      - "Publish DevContainer Image"
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Image scan depth (fast = HIGH/CRITICAL only; deep = full filesystem)'
+        required: true
+        default: 'fast'
+        type: choice
+        options:
+          - fast
+          - deep
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  packages: read
+
+env:
+  TRIVY_IMAGE: aquasec/trivy:0.54.1
+  DEVCONTAINER_IMAGE_NAME: agentic-coding-devcontainer
+
+jobs:
+  code-scanning-probe:
+    name: "🔍 Code Scanning Probe"
+    runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    outputs:
+      enabled: ${{ steps.probe.outputs.enabled }}
+    steps:
+      - name: Detect code scanning availability
+        id: probe
+        run: |
+          STATUS=$(curl -sS -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/code-scanning/default-setup")
+          if [ "$STATUS" = "200" ] || [ "$STATUS" = "204" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  trivy-image-fast:
+    name: "🛡️ Trivy Image Scan (fast)"
+    runs-on: ubuntu-latest
+    needs: code-scanning-probe
+    if: (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || (github.event_name == 'workflow_dispatch' && inputs.scan_type == 'fast')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Resolve GHCR image reference
+        id: image_ref
+        run: |
+          GHCR_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "devcontainer_image=ghcr.io/${GHCR_OWNER}/${DEVCONTAINER_IMAGE_NAME}:latest" >> "$GITHUB_OUTPUT"
+
+      - name: Pull devcontainer image from GHCR (fallback to local build)
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          if ! docker pull "${{ steps.image_ref.outputs.devcontainer_image }}"; then
+            echo "GHCR pull unavailable; building local devcontainer image as fallback"
+            docker compose -f .devcontainer/docker-compose.yml build agentic-coding
+            docker tag agentic-coding-image:latest "${{ steps.image_ref.outputs.devcontainer_image }}"
+          fi
+
+      - name: Generate Trivy image SARIF (fast)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/work" "$TRIVY_IMAGE" \
+            image --severity HIGH,CRITICAL --format sarif --output /work/trivy-image-fast.sarif --exit-code 0 --no-progress "${{ steps.image_ref.outputs.devcontainer_image }}"
+
+      - name: Enforce HIGH/CRITICAL gate (image)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" \
+            image --severity HIGH,CRITICAL --exit-code 1 --no-progress "${{ steps.image_ref.outputs.devcontainer_image }}"
+
+      - name: Upload Trivy image SARIF to GitHub Code Scanning
+        if: always() && needs.code-scanning-probe.outputs.enabled == 'true' && hashFiles('trivy-image-fast.sarif') != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-image-fast.sarif
+          category: trivy-devcontainer-image
+
+      - name: Add fast scan summary
+        if: always()
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" \
+            image --severity HIGH,CRITICAL --format json "${{ steps.image_ref.outputs.devcontainer_image }}" > trivy-image-fast.json
+
+          HIGH_COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length' trivy-image-fast.json)
+          CRITICAL_COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' trivy-image-fast.json)
+
+          {
+            echo "## DevContainer Image Scan (Fast)"
+            echo ""
+            echo "| Scan | High | Critical |"
+            echo "|---|---:|---:|"
+            echo "| Image (${{ steps.image_ref.outputs.devcontainer_image }}) | ${HIGH_COUNT} | ${CRITICAL_COUNT} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  trivy-deep:
+    name: "🛡️ Trivy Image Scan (deep)"
+    runs-on: ubuntu-latest
+    needs: code-scanning-probe
+    if: github.event_name == 'workflow_dispatch' && inputs.scan_type == 'deep'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Resolve GHCR image reference
+        id: image_ref
+        run: |
+          GHCR_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "devcontainer_image=ghcr.io/${GHCR_OWNER}/${DEVCONTAINER_IMAGE_NAME}:latest" >> "$GITHUB_OUTPUT"
+
+      - name: Pull devcontainer image from GHCR (fallback to local build)
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          if ! docker pull "${{ steps.image_ref.outputs.devcontainer_image }}"; then
+            echo "GHCR pull unavailable; building local devcontainer image as fallback"
+            docker compose -f .devcontainer/docker-compose.yml build agentic-coding
+            docker tag agentic-coding-image:latest "${{ steps.image_ref.outputs.devcontainer_image }}"
+          fi
+
+      - name: Generate Trivy deep image SARIF
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/work" "$TRIVY_IMAGE" \
+            image --severity HIGH,CRITICAL --format sarif --output /work/trivy-deep-image.sarif --exit-code 0 --no-progress "${{ steps.image_ref.outputs.devcontainer_image }}"
+
+      - name: Generate Trivy deep filesystem SARIF
+        run: |
+          docker run --rm -v "$PWD:/repo" "$TRIVY_IMAGE" \
+            fs --severity HIGH,CRITICAL --scanners vuln,config --format sarif --output /repo/trivy-deep-fs.sarif --exit-code 0 --no-progress /repo
+
+      - name: Upload deep image results
+        if: always() && needs.code-scanning-probe.outputs.enabled == 'true' && hashFiles('trivy-deep-image.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-deep-image.sarif
+          category: trivy-devcontainer-deep-image
+
+      - name: Upload deep filesystem results
+        if: always() && needs.code-scanning-probe.outputs.enabled == 'true' && hashFiles('trivy-deep-fs.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-deep-fs.sarif
+          category: trivy-devcontainer-deep-fs
+
+      - name: Add deep scan summary
+        if: always()
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/repo" "$TRIVY_IMAGE" \
+            image --severity HIGH,CRITICAL --format json "${{ steps.image_ref.outputs.devcontainer_image }}" > trivy-deep-image.json
+
+          docker run --rm -v "$PWD:/repo" "$TRIVY_IMAGE" \
+            fs --severity HIGH,CRITICAL --format json /repo > trivy-deep-fs.json
+
+          IMG_HIGH=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length' trivy-deep-image.json)
+          IMG_CRITICAL=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' trivy-deep-image.json)
+          FS_HIGH=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length' trivy-deep-fs.json)
+          FS_CRITICAL=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' trivy-deep-fs.json)
+
+          {
+            echo "## DevContainer Security Summary (Deep)"
+            echo ""
+            echo "| Scan | High | Critical |"
+            echo "|---|---:|---:|"
+            echo "| Image (${{ steps.image_ref.outputs.devcontainer_image }}) | ${IMG_HIGH} | ${IMG_CRITICAL} |"
+            echo "| Filesystem (repo) | ${FS_HIGH} | ${FS_CRITICAL} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  security-summary:
+    name: "📊 DevContainer Security Summary"
+    runs-on: ubuntu-latest
+    needs:
+      - trivy-image-fast
+      - trivy-deep
+    if: always()
+    steps:
+      - name: Write job summary
+        run: |
+          {
+            echo "## DevContainer Security Summary"
+            echo ""
+            echo "| Scan | Result |"
+            echo "|---|---|"
+            echo "| DevContainer Image Scan | ${{ needs.trivy-image-fast.result == 'success' && '✅ Passed' || needs.trivy-image-fast.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |"
+            echo "| Deep filesystem scan | ${{ needs.trivy-deep.result == 'success' && '✅ Passed' || needs.trivy-deep.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
