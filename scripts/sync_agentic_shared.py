@@ -80,7 +80,7 @@ def sync_file(src_file: Path, dst_file: Path, copied: list[str], skipped: list[s
 def main() -> int:
     repo_root = Path.cwd()
     shared_root = Path("/tmp/agentic-shared")
-    manifest_path = shared_root / "manifests" / "agentic-devops.txt"
+    manifest_path = shared_root / "manifests" / "agentic-coding.txt"
 
     manifest = read_manifest(manifest_path)
     copied: list[str] = []
