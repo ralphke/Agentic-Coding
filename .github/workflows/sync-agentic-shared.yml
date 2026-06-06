@@ -15,89 +15,55 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Phase 1 — fetch only the manifest file from agentic-shared (no full clone).
-      # Clones into /tmp (outside GITHUB_WORKSPACE) so the temp dir never appears
-      # as an untracked path inside the Agentic-Coding working tree.
-      # AGENTIC_SHARED_TOKEN: PAT with Contents:Read on agentic-shared.
-      # Required when private; when public the token-less fallback is used.
-      - name: Fetch manifest from agentic-shared (sparse)
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.AGENTIC_DEVOPS_TOKEN }}
+          fetch-depth: 0
+
+      - name: Clone agentic-shared
         env:
           AGENTIC_SHARED_TOKEN: ${{ secrets.AGENTIC_SHARED_TOKEN }}
         run: |
+          set -euo pipefail
           AUTH=""
           [[ -n "$AGENTIC_SHARED_TOKEN" ]] && AUTH="x-access-token:${AGENTIC_SHARED_TOKEN}@"
-          git clone --depth=1 --filter=blob:none --no-checkout \
-            "https://${AUTH}github.com/ralphke/agentic-shared.git" \
-            /tmp/agentic-shared
-          cd /tmp/agentic-shared
-          git sparse-checkout init --cone
-          git sparse-checkout set manifests
-          git checkout
+          git clone --depth=1 "https://${AUTH}github.com/ralphke/agentic-shared.git" /tmp/agentic-shared
 
-      # Phase 2 — use the manifest to scope BOTH repo checkouts to only the
-      # directories they declare. Nothing outside those directories is fetched.
-      - name: Sparse-checkout manifest directories from agentic-shared and Agentic-Coding
-        env:
-          AGENTIC_SHARED_TOKEN: ${{ secrets.AGENTIC_SHARED_TOKEN }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Configure git for GitHub Actions
         run: |
-          MANIFEST="/tmp/agentic-shared/manifests/agentic-coding.txt"
-          [[ ! -f "$MANIFEST" ]] && { echo "::error::Manifest not found: $MANIFEST"; exit 1; }
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Derive the unique top-level directories referenced by the manifest.
-          mapfile -t DIRS < <(grep -v '^#\|^[[:space:]]*$' "$MANIFEST" \
-            | xargs -I{} dirname {} | sort -u)
-          echo "Manifest directories: ${DIRS[*]}"
-
-          # Expand agentic-shared sparse checkout to all manifest files.
-          cd /tmp/agentic-shared
-          git sparse-checkout set manifests "${DIRS[@]}"
-          git checkout
-          cd "$GITHUB_WORKSPACE"
-
-          # Sparse-checkout Agentic-Coding — only the same manifest directories.
-          git init .
-          git remote add origin \
-            "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
-          git sparse-checkout init --cone
-          git sparse-checkout set "${DIRS[@]}"
-          git fetch --depth=1 origin main
-          git checkout main
-
-      # Phase 3 — copy each manifest file from agentic-shared into this repo.
-      - name: Copy manifest files into Agentic-Coding
+      - name: Sync shared manifest assets with merge-aware logic
         run: |
-          MANIFEST="/tmp/agentic-shared/manifests/agentic-coding.txt"
-          while IFS= read -r file || [[ -n "$file" ]]; do
-            [[ -z "$file" || "$file" =~ ^# ]] && continue
-            src="/tmp/agentic-shared/${file}"
-            dst="${file}"
-            if [[ ! -e "$src" ]]; then
-              echo "::warning::Not found in agentic-shared: $file"
-              continue
-            fi
-            mkdir -p "$(dirname "$dst")"
-            cp -R "$src" "$dst"
-            echo "  ✅ $file"
-          done < "$MANIFEST"
+          set -euo pipefail
+          python3 scripts/sync_agentic_shared.py
 
-      # Guard — skip PR creation when repos are already in sync.
+      - name: Stage sync changes
+        run: |
+          set -euo pipefail
+          git add -A
+          git status --short
+
       - name: Check for changes
         id: changes
         run: |
-          if git diff --quiet HEAD 2>/dev/null && git diff --cached --quiet HEAD 2>/dev/null; then
+          set -euo pipefail
+          if [[ -z "$(git status --porcelain)" ]]; then
             echo "detected=false" >> "$GITHUB_OUTPUT"
             echo "No changes — repos are already in sync."
           else
             echo "detected=true" >> "$GITHUB_OUTPUT"
             echo "Changes detected — will open a sync PR."
+            git diff --stat
           fi
 
       - name: Create sync pull request
         if: steps.changes.outputs.detected == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.AGENTIC_DEVOPS_TOKEN }}
           branch: sync/agentic-shared
           delete-branch: true
           commit-message: "sync: update shared Software Fabric assets from agentic-shared"
@@ -105,6 +71,6 @@ jobs:
           body: |
             Sync canonical shared assets from [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared).
 
-            Files synced are listed in [`manifests/agentic-coding.txt`](https://github.com/ralphke/agentic-shared/blob/main/manifests/agentic-coding.txt) in the upstream repo — no workflow changes are needed when the manifest changes.
+            Files synced are listed in [`manifests/agentic-coding.txt`](https://github.com/ralphke/agentic-shared/blob/main/manifests/agentic-coding.txt) in the upstream repo.
 
             Workshop-specific labs, docs, and environment files remain local to this repository.
