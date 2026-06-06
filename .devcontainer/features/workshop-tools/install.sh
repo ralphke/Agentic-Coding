@@ -76,6 +76,12 @@ else
     && mv "$TMP_DIR/copilot" /usr/local/bin/copilot \
     && chmod +x /usr/local/bin/copilot; then
     echo "[workshop-tools] Copilot CLI installed"
+    echo "[workshop-tools] Running Copilot CLI self-update..."
+    if /usr/local/bin/copilot update; then
+      echo "[workshop-tools] Copilot CLI updated"
+    else
+      echo "[workshop-tools] WARNING: Copilot CLI update failed"
+    fi
   else
     echo "[workshop-tools] WARNING: Copilot CLI install failed"
   fi
