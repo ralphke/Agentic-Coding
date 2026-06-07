@@ -18,7 +18,7 @@
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-IMAGE_NAME="agentic-workshop:scan"
+IMAGE_NAME="agentic-coding-image"
 REPORT_DIR="${SCRIPT_DIR}/security-reports"
 TARGET_IMAGE=""
 

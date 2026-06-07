@@ -6,7 +6,7 @@
 services:
   agentic-coding:
     container_name: Agentic-Coding-latest
-    image: agentic-coding-image:latest
+    image: ghcr.io/ralphke/agentic-coding-image@sha256:25a699a1f866a77aa00e5a16f0bb098ecd4425dabe6be21881a9ca8de788d73d
     build:
       context: .
       dockerfile: ${DOCKERFILE_TARGET:-Dockerfile.security-fix}
