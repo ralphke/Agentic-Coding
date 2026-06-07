@@ -1,6 +1,6 @@
 {
   "name": "Agentic Coding Workshop",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "image": "ghcr.io/ralphke/agentic-coding-image@sha256:25a699a1f866a77aa00e5a16f0bb098ecd4425dabe6be21881a9ca8de788d73d",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "features": {
     "ghcr.io/devcontainers/features/python:1": {
