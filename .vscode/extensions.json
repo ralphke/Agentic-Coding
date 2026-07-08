@@ -1,0 +1,17 @@
+{
+    "recommendations": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.csharp",
+        "GitHub.vscode-pull-request-github"
+    ],
+    "unwantedRecommendations": [
+        "claude-code",
+        "ms-edgedevtools.vscode-edge-devtools",
+        "ms-toolsai.jupyter",
+        "aspire.aspire",
+        "humao.rest-client",
+        "ms-azuretools.vscode-docker"
+    ]
+}

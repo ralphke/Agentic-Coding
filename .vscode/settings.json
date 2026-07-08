@@ -1,4 +1,5 @@
 {
-    "python.defaultInterpreterPath": "${workspaceFolder}\\.venv-Linux\\bin\\python.exe",
-    "python.analysis.typeCheckingMode": "off"
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv-linux/bin/python3",
+    "python.analysis.typeCheckingMode": "off",
+    "python.analysis.indexing": false
 }

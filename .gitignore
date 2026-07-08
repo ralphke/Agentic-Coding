@@ -3,4 +3,6 @@ resources/vibecoding/_fix_ocr.py
 
 # Python virtual environment
 .venv-linux/
-build/~$vibe-to-live-deck.pptx
+build/*.pptx
+DORA/
+vscode-server.tar.gz

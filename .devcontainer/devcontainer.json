@@ -3,6 +3,9 @@
   "image": "ghcr.io/ralphke/agentic-coding-image@sha256:25a699a1f866a77aa00e5a16f0bb098ecd4425dabe6be21881a9ca8de788d73d",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
     "ghcr.io/devcontainers/features/python:1": {
       "installTools": true,
       "optimize": true,
@@ -67,7 +70,6 @@
     "vscode": {
       "extensions": [
         "ms-python.python",
-        "ms-python.pylance",
         "ms-python.vscode-pylance",
         "ms-dotnettools.csdevkit",
         "ms-dotnettools.csharp",
@@ -75,8 +77,6 @@
         "aspire.aspire",
         "humao.rest-client",
         "ms-azuretools.vscode-docker",
-        "github.copilot",
-        "github.copilot-chat",
         "GitHub.vscode-pull-request-github"
       ],
       "settings": {
