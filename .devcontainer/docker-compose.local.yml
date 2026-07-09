@@ -7,5 +7,5 @@ services:
     image: agentic-coding-image:latest
     build:
       context: .
-      dockerfile: ${DOCKERFILE_TARGET:-Dockerfile.security-fix}
+      dockerfile: ${DOCKERFILE_TARGET:-Dockerfile}
     pull_policy: never

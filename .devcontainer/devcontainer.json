@@ -3,7 +3,7 @@
   "image": "ghcr.io/ralphke/agentic-coding-image@sha256:25a699a1f866a77aa00e5a16f0bb098ecd4425dabe6be21881a9ca8de788d73d",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "features": {
-    "ghcr.io/devcontainers/features/node:1": {
+    "ghcr.io/devcontainers/features/node:2.1.0": {
       "version": "lts"
     },
     "ghcr.io/devcontainers/features/python:1": {
@@ -69,6 +69,7 @@
   "customizations": {
     "vscode": {
       "extensions": [
+        "ms-vscode-remote.remote-containers",
         "ms-python.python",
         "ms-python.vscode-pylance",
         "ms-dotnettools.csdevkit",

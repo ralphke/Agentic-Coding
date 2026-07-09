@@ -6,10 +6,11 @@
 services:
   agentic-coding:
     container_name: Agentic-Coding-latest
-    image: ghcr.io/ralphke/agentic-coding-image@sha256:25a699a1f866a77aa00e5a16f0bb098ecd4425dabe6be21881a9ca8de788d73d
+    #    image: ghcr.io/ralphke/agentic-coding-image@sha256:25a699a1f866a77aa00e5a16f0bb098ecd4425dabe6be21881a9ca8de788d73d
+    image: ghcr.io/ralphke/agentic-coding-image:latest
     build:
       context: .
-      dockerfile: ${DOCKERFILE_TARGET:-Dockerfile.security-fix}
+      dockerfile: ${DOCKERFILE_TARGET:-Dockerfile}
     command: /bin/bash
     environment:
       PATH: /usr/local/python/current/bin:/usr/local/py-utils/bin:/usr/local/jupyter:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/dotnet

@@ -24,7 +24,7 @@ Adds '--no-cache' to the compose command.
 pwsh -ExecutionPolicy Bypass -File .devcontainer/build-with-dockerfile.ps1 -Target security-fix
 
 .EXAMPLE
-pwsh -ExecutionPolicy Bypass -File .devcontainer/build-with-dockerfile.ps1 -Target custom -CustomDockerfile Dockerfile.security-fix -Up
+pwsh -ExecutionPolicy Bypass -File .devcontainer/build-with-dockerfile.ps1 -Target custom -CustomDockerfile Dockerfile -Up
 #>
 param(
     [ValidateSet("security-fix", "custom")]
