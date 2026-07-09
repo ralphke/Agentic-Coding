@@ -9,7 +9,7 @@ Sets DOCKERFILE_TARGET for the current process, runs docker compose with
 .devcontainer/docker-compose.yml, and restores the previous environment value.
 
 .PARAMETER Target
-Predefined Dockerfile target: security-fix or custom.
+Predefined Dockerfile target: latest-update or custom.
 
 .PARAMETER CustomDockerfile
 Dockerfile name or path used when -Target custom is selected.
@@ -21,14 +21,14 @@ Runs 'docker compose up --build' instead of 'docker compose build'.
 Adds '--no-cache' to the compose command.
 
 .EXAMPLE
-pwsh -ExecutionPolicy Bypass -File .devcontainer/build-with-dockerfile.ps1 -Target security-fix
+pwsh -ExecutionPolicy Bypass -File .devcontainer/build-with-dockerfile.ps1 -Target latest-update
 
 .EXAMPLE
 pwsh -ExecutionPolicy Bypass -File .devcontainer/build-with-dockerfile.ps1 -Target custom -CustomDockerfile Dockerfile -Up
 #>
 param(
-    [ValidateSet("security-fix", "custom")]
-    [string]$Target = "security-fix",
+    [ValidateSet("latest-update", "custom")]
+    [string]$Target = "latest-update",
     [string]$CustomDockerfile,
     [switch]$Up,
     [switch]$NoCache
@@ -43,7 +43,7 @@ if (-not (Test-Path -LiteralPath $composePath)) {
 }
 
 switch ($Target) {
-    "security-fix" { $dockerfile = "Dockerfile.security-fix" }
+    "latest-update" { $dockerfile = "Dockerfile.latest-update" }
     "custom" {
         if ([string]::IsNullOrWhiteSpace($CustomDockerfile)) {
             Write-Error "When Target is 'custom', provide -CustomDockerfile with a Dockerfile name or path."

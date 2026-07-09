@@ -1,0 +1,8 @@
+{
+  "name": "Agentic Coding Workshop",
+  "extends": "./devcontainer-base.json",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  }
+}

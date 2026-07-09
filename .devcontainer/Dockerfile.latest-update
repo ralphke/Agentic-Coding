@@ -1,0 +1,12 @@
+FROM ghcr.io/ralphke/agentic-coding-image:latest
+# Custom image: build with extentions for this repo based on Microsoft devcontainers base
+# The vsc-* local hash image only exists on the developer's machine and cannot be
+# pulled in CI; this Dockerfile targets the public upstream image instead.
+
+# Fix system-level vulnerabilities and resolve dpkg conflicts
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
+    dpkg --configure -a && \
+    apt-get install -f -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*

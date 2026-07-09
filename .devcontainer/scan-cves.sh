@@ -8,11 +8,12 @@
 #   bash .devcontainer/scan-cves.sh --trivy  # Run Trivy instead
 #   bash .devcontainer/scan-cves.sh --full   # Run both
 #   bash .devcontainer/scan-cves.sh --current [--trivy|--full]
-#                                        # Scan currently running container image
+#                                 # Scan currently running container image
 #
 # Prerequisites:
 #   - Docker Desktop with Docker Scout enabled
 #   - OR Trivy installed locally (https://github.com/aquasecurity/trivy)
+#   - OR Scout installed locally (https://github.com/docker/scout-cli)
 #
 
 set -uo pipefail

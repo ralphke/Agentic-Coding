@@ -2,10 +2,12 @@
 # Use together with .devcontainer/docker-compose.yml:
 #   docker compose -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.local.yml build --no-cache
 #   docker compose -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.local.yml up -d
+#   docker compose -f .devcontainer/docker-compose.local.yml build --no-cache
+#   docker compose -f .devcontainer/docker-compose.local.yml up -d
 services:
   agentic-coding:
     image: agentic-coding-image:latest
     build:
       context: .
-      dockerfile: ${DOCKERFILE_TARGET:-Dockerfile}
+      dockerfile: ${DOCKERFILE_TARGET:-Dockerfile.latest-update}
     pull_policy: never

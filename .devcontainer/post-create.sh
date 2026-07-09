@@ -33,6 +33,15 @@ else
   echo "⚠ python3.14 not found — skipping .venv-linux creation"
 fi
 
+# Install Docker Scout CLI
+echo ""
+echo "Installing Docker Scout CLI..."
+if command -v docker &>/dev/null; then
+  curl -sSfL --retry 3 https://raw.githubusercontent.com/docker/scout-cli/main/install.sh | sh -s -- && echo "✓ Docker Scout CLI installed" || echo "⚠ Docker Scout CLI installation failed"
+else
+  echo "⚠ Docker not available — skipping Docker Scout installation"
+fi
+
 # Version verification.
 echo ""
 echo "=== Environment summary ==="
@@ -42,6 +51,7 @@ echo -n ".NET:    "; dotnet --version
 echo -n "DAB:     "; dab --version 2>/dev/null || echo "(not found)"
 echo -n "Aspire:  "; aspire --version 2>/dev/null || echo "(not found)"
 echo -n "Copilot: "; copilot --version 2>/dev/null || echo "(not found)"
+echo -n "Scout:   "; scout --version 2>/dev/null || echo "(not installed)"
 echo -n "Potrace: "; potrace --version 2>/dev/null || echo "(not installed)"
 echo -n "Bubblewrap: "; bwrap --version 2>/dev/null || echo "(not installed)"
 echo -n "Docker:  "; docker --version 2>/dev/null || echo "(not available)"
