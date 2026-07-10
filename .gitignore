@@ -1,6 +1,5 @@
-.copilot-tracking/research/20260508-vibecoding-persona-skill-gaps-research.md
+.copilot-tracking/
 resources/vibecoding/_fix_ocr.py
-.devcontainer/devcontainer.local.json
 # Python virtual environment
 .venv-linux/
 build/*.pptx

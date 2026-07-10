@@ -116,6 +116,7 @@ jobs:
 
       - name: Run Docker Scout CVE scan (non-blocking, fast trigger)
         id: scout_scan
+        if: always()
         continue-on-error: true
         uses: docker/scout-action@v1
         with:
@@ -138,6 +139,8 @@ jobs:
         run: |
           if [ "${{ steps.scout_scan.outcome }}" = "success" ]; then
             echo "status=✅ Completed (informational)" >> "$GITHUB_OUTPUT"
+          elif [ "${{ steps.scout_scan.outcome }}" = "skipped" ]; then
+            echo "status=⏭️ Skipped" >> "$GITHUB_OUTPUT"
           else
             echo "status=⚠️ Error (non-blocking)" >> "$GITHUB_OUTPUT"
           fi
@@ -217,6 +220,7 @@ jobs:
 
       - name: Run Docker Scout CVE scan (non-blocking, deep trigger)
         id: scout_scan
+        if: always()
         continue-on-error: true
         uses: docker/scout-action@v1
         with:
@@ -239,6 +243,8 @@ jobs:
         run: |
           if [ "${{ steps.scout_scan.outcome }}" = "success" ]; then
             echo "status=✅ Completed (informational)" >> "$GITHUB_OUTPUT"
+          elif [ "${{ steps.scout_scan.outcome }}" = "skipped" ]; then
+            echo "status=⏭️ Skipped" >> "$GITHUB_OUTPUT"
           else
             echo "status=⚠️ Error (non-blocking)" >> "$GITHUB_OUTPUT"
           fi
@@ -253,12 +259,28 @@ jobs:
     steps:
       - name: Write job summary
         run: |
+          SCAN_MODE="none"
+          if [ "${{ needs.trivy-image-fast.result }}" != "skipped" ]; then
+            SCAN_MODE="fast"
+          elif [ "${{ needs.trivy-deep.result }}" != "skipped" ]; then
+            SCAN_MODE="deep"
+          fi
+
+          SCOUT_STATUS="${{ needs.trivy-image-fast.outputs.scout_status }}"
+          if [ -z "$SCOUT_STATUS" ]; then
+            SCOUT_STATUS="${{ needs.trivy-deep.outputs.scout_status }}"
+          fi
+          if [ -z "$SCOUT_STATUS" ]; then
+            SCOUT_STATUS="⏭️ Skipped"
+          fi
+
           {
             echo "## DevContainer Security Summary"
             echo ""
             echo "| Scan | Result |"
             echo "|---|---|"
+            echo "| Scan mode | ${SCAN_MODE} |"
             echo "| DevContainer Image Scan | ${{ needs.trivy-image-fast.result == 'success' && '✅ Passed' || needs.trivy-image-fast.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |"
             echo "| Deep filesystem scan | ${{ needs.trivy-deep.result == 'success' && '✅ Passed' || needs.trivy-deep.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |"
-            echo "| Docker Scout image scan | ${{ needs.trivy-image-fast.outputs.scout_status || needs.trivy-deep.outputs.scout_status || '⏭️ Skipped' }} |"
+            echo "| Docker Scout image scan | ${SCOUT_STATUS} |"
           } >> "$GITHUB_STEP_SUMMARY"
