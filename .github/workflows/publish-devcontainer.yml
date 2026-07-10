@@ -12,7 +12,7 @@ permissions:
   packages: write
 
 env:
-  DEVCONTAINER_IMAGE_NAME: agentic-coding-devcontainer
+  DEVCONTAINER_IMAGE_NAME: agentic-coding-image
 
 jobs:
   build-and-push:

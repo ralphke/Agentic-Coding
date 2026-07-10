@@ -31,7 +31,7 @@ permissions:
 
 env:
   TRIVY_IMAGE: aquasec/trivy:0.54.1
-  DEVCONTAINER_IMAGE_NAME: agentic-coding-devcontainer
+  DEVCONTAINER_IMAGE_NAME: agentic-coding-image
 
 jobs:
   code-scanning-probe:
@@ -58,6 +58,8 @@ jobs:
     name: "🛡️ Trivy Image Scan (fast)"
     runs-on: ubuntu-latest
     needs: code-scanning-probe
+    outputs:
+      scout_status: ${{ steps.scout_status.outputs.status }}
     if: (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || (github.event_name == 'workflow_dispatch' && inputs.scan_type == 'fast')
     steps:
       - name: Checkout
@@ -89,7 +91,7 @@ jobs:
             image --severity HIGH,CRITICAL --exit-code 1 --no-progress "${{ steps.image_ref.outputs.devcontainer_image }}"
 
       - name: Upload Trivy image SARIF to GitHub Code Scanning
-        if: always() && needs.code-scanning-probe.outputs.enabled == 'true' && hashFiles('trivy-image-fast.sarif') != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+        if: always() && needs.code-scanning-probe.outputs.enabled == 'true' && hashFiles('trivy-image-fast.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-image-fast.sarif
@@ -112,10 +114,40 @@ jobs:
             echo "| Image (${{ steps.image_ref.outputs.devcontainer_image }}) | ${HIGH_COUNT} | ${CRITICAL_COUNT} |"
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Run Docker Scout CVE scan (non-blocking, fast trigger)
+        id: scout_scan
+        continue-on-error: true
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: ${{ steps.image_ref.outputs.devcontainer_image }}
+          sarif-file: scout-image-fast.sarif
+          summary: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Docker Scout SARIF to GitHub Code Scanning (fast)
+        if: always() && needs.code-scanning-probe.outputs.enabled == 'true' && hashFiles('scout-image-fast.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: scout-image-fast.sarif
+          category: docker-scout-devcontainer-image-fast
+
+      - name: Set Docker Scout status output (fast)
+        id: scout_status
+        if: always()
+        run: |
+          if [ "${{ steps.scout_scan.outcome }}" = "success" ]; then
+            echo "status=✅ Completed (informational)" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=⚠️ Error (non-blocking)" >> "$GITHUB_OUTPUT"
+          fi
+
   trivy-deep:
     name: "🛡️ Trivy Image Scan (deep)"
     runs-on: ubuntu-latest
     needs: code-scanning-probe
+    outputs:
+      scout_status: ${{ steps.scout_status.outputs.status }}
     if: github.event_name == 'workflow_dispatch' && inputs.scan_type == 'deep'
     steps:
       - name: Checkout
@@ -183,6 +215,34 @@ jobs:
             echo "| Filesystem (repo) | ${FS_HIGH} | ${FS_CRITICAL} |"
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Run Docker Scout CVE scan (non-blocking, deep trigger)
+        id: scout_scan
+        continue-on-error: true
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: ${{ steps.image_ref.outputs.devcontainer_image }}
+          sarif-file: scout-image-deep.sarif
+          summary: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Docker Scout SARIF to GitHub Code Scanning (deep)
+        if: always() && needs.code-scanning-probe.outputs.enabled == 'true' && hashFiles('scout-image-deep.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: scout-image-deep.sarif
+          category: docker-scout-devcontainer-image-deep
+
+      - name: Set Docker Scout status output (deep)
+        id: scout_status
+        if: always()
+        run: |
+          if [ "${{ steps.scout_scan.outcome }}" = "success" ]; then
+            echo "status=✅ Completed (informational)" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=⚠️ Error (non-blocking)" >> "$GITHUB_OUTPUT"
+          fi
+
   security-summary:
     name: "📊 DevContainer Security Summary"
     runs-on: ubuntu-latest
@@ -200,4 +260,5 @@ jobs:
             echo "|---|---|"
             echo "| DevContainer Image Scan | ${{ needs.trivy-image-fast.result == 'success' && '✅ Passed' || needs.trivy-image-fast.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |"
             echo "| Deep filesystem scan | ${{ needs.trivy-deep.result == 'success' && '✅ Passed' || needs.trivy-deep.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |"
+            echo "| Docker Scout image scan | ${{ needs.trivy-image-fast.outputs.scout_status || needs.trivy-deep.outputs.scout_status || '⏭️ Skipped' }} |"
           } >> "$GITHUB_STEP_SUMMARY"

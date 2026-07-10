@@ -149,55 +149,31 @@ Workshop-specific labs, documentation, and environment setup remain owned locall
 - spec: optional specification for exercises.
 - test: optional validation tests for exercises.
 
-## Devcontainer vs manual Docker build
+## Devcontainer configuration and mode switching
 
-This repository uses `.devcontainer/devcontainer.json` as the primary VS Code container definition for the normal workshop workflow.
+This repository uses schema-valid, explicit devcontainer templates.
 
-- `devcontainer.json` is the source of truth for VS Code devcontainer opens and rebuilds.
-- `.devcontainer/docker-compose.yml` and `.devcontainer/Dockerfile.security-fix` are optional manual build helpers.
-- `.devcontainer/docker-compose.local.yml` is an optional local override for developer testing.
-- The manual compose path is aligned to the same base image as `devcontainer.json`; keep `Dockerfile.security-fix` updated if the devcontainer base image changes.
-- Prefer the `devcontainer.json` path unless you explicitly need a custom Docker compose build.
+- `.devcontainer/devcontainer-build.json`: local Dockerfile build template.
+- `.devcontainer/devcontainer-prebuilt.json`: GHCR image template.
+- `.devcontainer/devcontainer.json`: active config used by VS Code Dev Containers.
+- `.devcontainer/devcontainer.local.json`: optional local-mount variant.
 
-Local testing workflow with the override file:
+Switch modes with the workflow helper:
 
-```powershell
-docker compose -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.local.yml build --no-cache
-docker compose -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.local.yml up -d
+```bash
+bash .devcontainer/devcontainer-workflow.sh use-local
+bash .devcontainer/devcontainer-workflow.sh use-prebuilt
 ```
 
-This keeps the default compose file pinned to the hardened GHCR image while still allowing quick local rebuilds.
+Build and publish the devcontainer image with the same workflow helper:
 
-### Push local image to GHCR
-
-Use the PowerShell helper script to push `agentic-coding-image:latest` to GitHub Container Registry:
-
-```powershell
-./scripts/push-ghcr-image.ps1 -Owner <github-owner>
+```bash
+bash .devcontainer/devcontainer-workflow.sh build-and-push latest
 ```
 
-Authentication options:
+After switching modes, rebuild the container from VS Code.
 
-- Set `GITHUB_TOKEN` in your shell (recommended for CI and local automation).
-- Or sign in with GitHub CLI (`gh auth login`), then the script can use `gh auth token`.
-
-Required token scopes for GHCR push:
-
-- `write:packages`
-- `read:packages`
-
-Explicit token usage example (PowerShell):
-
-```powershell
-$env:GITHUB_TOKEN = "<github_pat_with_write_packages>"
-./scripts/push-ghcr-image.ps1 -Owner <github-owner>
-```
-
-Optional SHA tag push:
-
-```powershell
-./scripts/push-ghcr-image.ps1 -Owner <github-owner> -PushShaTag -ShaTag <commit-sha>
-```
+The canonical image name for local and CI publish paths is `ghcr.io/<owner>/agentic-coding-image`.
 
 ## Prerequisites
 
