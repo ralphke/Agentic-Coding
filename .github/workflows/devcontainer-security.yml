@@ -76,9 +76,10 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           if ! docker pull "${{ steps.image_ref.outputs.devcontainer_image }}"; then
             echo "GHCR pull unavailable; building local devcontainer image as fallback"
-            docker compose -f .devcontainer/docker-compose.yml build agentic-coding
-            docker tag agentic-coding-image:latest "${{ steps.image_ref.outputs.devcontainer_image }}"
+            docker build -f .devcontainer/Dockerfile -t "${{ steps.image_ref.outputs.devcontainer_image }}" .
           fi
+          echo "Resolved image inventory (filtered):"
+          docker image ls --format '{{.Repository}}:{{.Tag}}' | grep -E 'agentic-coding-image|ghcr\.io/.*/agentic-coding-image' || true
 
       - name: Generate Trivy image SARIF (fast)
         run: |
@@ -167,9 +168,10 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           if ! docker pull "${{ steps.image_ref.outputs.devcontainer_image }}"; then
             echo "GHCR pull unavailable; building local devcontainer image as fallback"
-            docker compose -f .devcontainer/docker-compose.yml build agentic-coding
-            docker tag agentic-coding-image:latest "${{ steps.image_ref.outputs.devcontainer_image }}"
+            docker build -f .devcontainer/Dockerfile -t "${{ steps.image_ref.outputs.devcontainer_image }}" .
           fi
+          echo "Resolved image inventory (filtered):"
+          docker image ls --format '{{.Repository}}:{{.Tag}}' | grep -E 'agentic-coding-image|ghcr\.io/.*/agentic-coding-image' || true
 
       - name: Generate Trivy deep image SARIF
         run: |
