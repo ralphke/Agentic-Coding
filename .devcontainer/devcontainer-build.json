@@ -1,4 +1,9 @@
 {
+  "name": "Agentic Coding Workshop",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "features": {
     "ghcr.io/devcontainers/features/node:2.1.0": {

@@ -54,6 +54,7 @@ check_cmd node "Node.js"
 check_cmd npx "npx"
 check_cmd python3.14 "Python 3.14"
 check_cmd dotnet ".NET SDK"
+check_cmd docker "Docker"
 
 if [[ -x .venv-linux/bin/python3 ]]; then
   pass ".venv-linux exists"
@@ -80,6 +81,8 @@ check_version "node" node --version
 check_version "npx" npx --version
 check_version "python3.14" python3.14 --version
 check_version "dotnet" dotnet --version
+check_version "docker" docker --version
+check_version "Scout" bash -c "docker scout version | tail -2"
 
 echo ""
 echo "Summary: PASS=$pass_count WARN=$warn_count FAIL=$fail_count"

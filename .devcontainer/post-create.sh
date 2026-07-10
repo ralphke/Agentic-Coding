@@ -51,7 +51,7 @@ echo -n ".NET:    "; dotnet --version
 echo -n "DAB:     "; dab --version 2>/dev/null || echo "(not found)"
 echo -n "Aspire:  "; aspire --version 2>/dev/null || echo "(not found)"
 echo -n "Copilot: "; copilot --version 2>/dev/null || echo "(not found)"
-echo -n "Scout:   "; scout --version 2>/dev/null || echo "(not installed)"
+echo -n "Scout:   "; docker scout version | tail -n 2 2>/dev/null || echo "(not installed)"
 echo -n "Potrace: "; potrace --version 2>/dev/null || echo "(not installed)"
 echo -n "Bubblewrap: "; bwrap --version 2>/dev/null || echo "(not installed)"
 echo -n "Docker:  "; docker --version 2>/dev/null || echo "(not available)"

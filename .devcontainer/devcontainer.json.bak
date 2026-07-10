@@ -1,8 +1,94 @@
 {
   "name": "Agentic Coding Workshop",
-  "extends": "./devcontainer-base.json",
   "build": {
     "dockerfile": "Dockerfile",
     "context": "."
-  }
+  },
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "features": {
+    "ghcr.io/devcontainers/features/node:2.1.0": {
+      "version": "lts"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "installTools": true,
+      "optimize": true,
+      "version": "3.14"
+    },
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "tabCompletions": true,
+      "version": "latest",
+      "additionalVersions": "8.0"
+    },
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "installDockerBuildx": true,
+      "installDockerComposeSwitch": true,
+      "version": "latest",
+      "dockerDashComposeVersion": "latest"
+    },
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "version": "latest",
+      "bicepVersion": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "installDirectlyFromGitHubRelease": true,
+      "version": "latest"
+    },
+    "ghcr.io/helpers4/devcontainer/github-dev:1": {},
+    "./features/workshop-tools": {
+      "installDab": true,
+      "installAspire": true,
+      "installCopilot": true
+    }
+  },
+  "postCreateCommand": "cd ${containerWorkspaceFolder} && ([ -x /bin/bash ] && /bin/bash .devcontainer/post-create.sh || /bin/sh .devcontainer/post-create.sh)",
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin:/home/vscode/.dotnet/tools:/home/vscode/.aspire/bin"
+  },
+  "forwardPorts": [
+    18888,
+    5000,
+    5001,
+    8000,
+    1433
+  ],
+  "portsAttributes": {
+    "18888": {
+      "label": "Aspire Dashboard",
+      "onAutoForward": "openBrowser"
+    },
+    "5000": {
+      "label": "ASP.NET HTTP"
+    },
+    "5001": {
+      "label": "ASP.NET HTTPS"
+    },
+    "8000": {
+      "label": "Python dev server"
+    },
+    "1433": {
+      "label": "SQL Server / DAB target"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode-remote.remote-containers",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.csharp",
+        "ms-toolsai.jupyter",
+        "aspire.aspire",
+        "humao.rest-client",
+        "ms-azuretools.vscode-docker",
+        "GitHub.vscode-pull-request-github"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv-linux/bin/python3",
+        "dotnet.defaultSolution": "disable",
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  "remoteUser": "vscode"
 }

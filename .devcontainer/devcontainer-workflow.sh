@@ -14,8 +14,9 @@ REGISTRY="ghcr.io"
 OWNER="ralphke"
 REPO="agentic-coding-image"
 DOCKERFILE=".devcontainer/Dockerfile"
-CONFIG_BUILD=".devcontainer/devcontainer.json"
+CONFIG_BUILD_TEMPLATE=".devcontainer/devcontainer-build.json"
 CONFIG_PREBUILT=".devcontainer/devcontainer-prebuilt.json"
+CONFIG_ACTIVE=".devcontainer/devcontainer.json"
 
 build() {
   local tag="${1:-latest}"
@@ -50,15 +51,15 @@ build_and_push() {
 
 use_local() {
   echo "Switching to local build mode..."
-  if [ -f "$CONFIG_BUILD" ]; then
+  if [ -f "$CONFIG_BUILD_TEMPLATE" ]; then
     [ -f .devcontainer/devcontainer.json.bak ] && rm -f .devcontainer/devcontainer.json.bak
-    [ -f .devcontainer/devcontainer.json ] && mv .devcontainer/devcontainer.json .devcontainer/devcontainer.json.bak
-    cp "$CONFIG_BUILD" .devcontainer/devcontainer.json
+    [ -f "$CONFIG_ACTIVE" ] && mv "$CONFIG_ACTIVE" .devcontainer/devcontainer.json.bak
+    cp "$CONFIG_BUILD_TEMPLATE" "$CONFIG_ACTIVE"
     echo "✓ devcontainer.json now uses local Dockerfile build"
-    echo "  (extends devcontainer-base.json + build mode)"
+    echo "  (schema-valid explicit configuration, no extends)"
     echo "  Rebuild container in VS Code: Cmd+Shift+P > Dev Containers: Rebuild Container"
   else
-    echo "✗ $CONFIG_BUILD not found"
+    echo "✗ $CONFIG_BUILD_TEMPLATE not found"
     exit 1
   fi
 }
@@ -67,10 +68,10 @@ use_prebuilt() {
   echo "Switching to pre-built image mode..."
   if [ -f "$CONFIG_PREBUILT" ]; then
     [ -f .devcontainer/devcontainer.json.bak ] && rm -f .devcontainer/devcontainer.json.bak
-    [ -f .devcontainer/devcontainer.json ] && mv .devcontainer/devcontainer.json .devcontainer/devcontainer.json.bak
-    cp "$CONFIG_PREBUILT" .devcontainer/devcontainer.json
+    [ -f "$CONFIG_ACTIVE" ] && mv "$CONFIG_ACTIVE" .devcontainer/devcontainer.json.bak
+    cp "$CONFIG_PREBUILT" "$CONFIG_ACTIVE"
     echo "✓ devcontainer.json now pulls from GHCR: ghcr.io/ralphke/agentic-coding-image:latest"
-    echo "  (extends devcontainer-base.json + image mode)"
+    echo "  (schema-valid explicit configuration, no extends)"
     echo "  Rebuild container in VS Code: Cmd+Shift+P > Dev Containers: Rebuild Container"
   else
     echo "✗ $CONFIG_PREBUILT not found"
@@ -92,10 +93,10 @@ Commands:
   use-prebuilt        Switch to pulling pre-built image from GHCR
 
 File Structure:
-  devcontainer-base.json       Shared configuration (features, extensions, ports)
-  devcontainer.json            Active config (extends base + build mode)
-  devcontainer-prebuilt.json   Template (extends base + image mode)
-  devcontainer.local.json      Developer overrides (machine-local customization)
+  devcontainer-build.json      Local-build template (schema-valid)
+  devcontainer-prebuilt.json   Pre-built-image template (schema-valid)
+  devcontainer.json            Active config copied from one of the templates
+  devcontainer.local.json      Optional local-mount variant (schema-valid)
 
 Examples:
   ./devcontainer-workflow.sh build latest
@@ -104,11 +105,11 @@ Examples:
 
 Workflow:
   1. First setup: ./devcontainer-workflow.sh use-local
-     (devcontainer.json extends base.json + local Dockerfile build)
+    (devcontainer.json copied from devcontainer-build.json)
   2. Make changes to .devcontainer/Dockerfile
   3. Build and push: ./devcontainer-workflow.sh build-and-push latest
   4. Switch other machines: ./devcontainer-workflow.sh use-prebuilt
-     (devcontainer.json extends base.json + pre-built GHCR image)
+    (devcontainer.json copied from devcontainer-prebuilt.json)
 EOF
 }
 
