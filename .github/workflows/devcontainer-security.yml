@@ -117,7 +117,7 @@ jobs:
 
       - name: Run Docker Scout CVE scan (non-blocking, fast trigger)
         id: scout_scan
-        if: always()
+        if: always() && steps.image_ref.outputs.devcontainer_image != ''
         continue-on-error: true
         uses: docker/scout-action@v1
         with:
@@ -222,7 +222,7 @@ jobs:
 
       - name: Run Docker Scout CVE scan (non-blocking, deep trigger)
         id: scout_scan
-        if: always()
+        if: always() && steps.image_ref.outputs.devcontainer_image != ''
         continue-on-error: true
         uses: docker/scout-action@v1
         with:
