@@ -1,12 +1,13 @@
-# GitHub Copilot Workshop
+# GitHub Copilot SDLC Workshop
 
-This repository hosts a hands-on workshop for beginner, intermediate, and advanced developers to learn how to use GitHub Copilot effectively.
+This repository hosts a hands-on workshop for beginner, intermediate, and advanced developers to learn how to use GitHub Copilot effectively in conjunction with the Softwrae Development life-circle (SDLC).
 
 ## Learning goals
 
 - Build practical Copilot habits for everyday coding.
 - Move from prompt quality and pair-programming fundamentals to agentic workflows.
 - End with an automated issue-to-Copilot flow where tasks can be handled autonomously.
+- Provide a structured, SDLC driven, agentic development process.
 
 ## Workshop tracks
 
