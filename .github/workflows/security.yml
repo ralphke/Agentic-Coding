@@ -60,7 +60,7 @@ jobs:
     needs: code-scanning-probe
     steps:
       - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@v7 # v4.1.7
         with:
           fetch-depth: 0
 
@@ -75,7 +75,7 @@ jobs:
           jq '.components | length' sbom.cyclonedx.json | xargs -I{} echo "Components in SBOM: {}"
 
       - name: Upload SBOM artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: sbom-cyclonedx-${{ github.sha }}
           path: sbom.cyclonedx.json
@@ -95,7 +95,7 @@ jobs:
 
       - name: Upload Grype report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: grype-report-${{ github.sha }}
           path: grype-report.json
@@ -123,7 +123,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@v7 # v4.1.7
 
       - name: Check PyPI for dependency confusion (Python)
         if: hashFiles('**/requirements*.txt') != ''
@@ -194,7 +194,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@v7 # v4.1.7
 
       - name: Verify Python requirements use hash pinning
         if: hashFiles('**/requirements*.txt') != ''
@@ -253,7 +253,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@v7 # v4.1.7
 
       - name: Check Dockerfiles for digest-pinned base images
         if: hashFiles('**/Dockerfile', '**/*.dockerfile', '**/docker-compose*.yml') != ''
