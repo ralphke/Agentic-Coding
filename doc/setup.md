@@ -41,6 +41,19 @@ Open the `Agentic-Coding` repository folder in the Agents app:
 
 You are ready for the first lab.
 
+## Optional but recommended: enable local OpenSPEC validation hooks
+
+To catch OpenSPEC stage and dependency pinning issues before CI, enable the
+repository hooks once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+This enables:
+- `.githooks/pre-commit` → validates `spec/openspec/` structure and change folder conventions
+- `.githooks/pre-push` → re-validates OpenSPEC structure and dependency pinning checks
+
 ## Verification checklist
 
 - [ ] VS Code Insiders is installed
@@ -89,4 +102,3 @@ Install and start **[Docker Desktop](https://www.docker.com/products/docker-desk
 - [ ] `dotnet --version` shows 10.0.x
 - [ ] `dab --version` shows a version number
 - [ ] `docker version` shows the host Docker version
-
