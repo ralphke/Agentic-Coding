@@ -15,6 +15,8 @@ collect_changed_files() {
     pre-push)
       if git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' >/dev/null 2>&1; then
         git diff --name-only '@{upstream}'...HEAD
+      else
+        git diff --name-only HEAD~1..HEAD 2>/dev/null || git show --pretty='' --name-only HEAD
       fi
       ;;
     *)
@@ -91,16 +93,17 @@ validate_dependency_pinning() {
       continue
     fi
 
-    if grep -Eq '^[[:space:]]*[A-Za-z0-9_.-]+' "$req_file"; then
-      if ! grep -q -- '--hash=' "$req_file"; then
-        echo "❌ Production requirements file lacks hash pinning: $req_file"
-        failed=1
-      fi
-      if grep -Ev '^[[:space:]]*($|#)' "$req_file" | grep -Eq '^[[:space:]]*[A-Za-z0-9_.-]+([^=]|$)'; then
-        echo "❌ Unpinned dependency version found in $req_file (use == and --hash)."
-        failed=1
-      fi
+    if ! grep -q -- '--hash=' "$req_file"; then
+      echo "❌ Production requirements file lacks hash pinning: $req_file"
+      failed=1
     fi
+    while IFS= read -r dep_line; do
+      [ -z "$dep_line" ] && continue
+      if ! printf '%s\n' "$dep_line" | grep -Eq '^[[:space:]]*[A-Za-z0-9_.-]+(\[[^]]+\])?==[^[:space:]]+'; then
+        echo "❌ Unpinned dependency version found in $req_file: $dep_line"
+        failed=1
+      fi
+    done < <(grep -Ev '^[[:space:]]*($|#|-)' "$req_file")
   done < <(printf '%s\n' "$CHANGED_FILES" | grep -E 'requirements[^/]*\.txt$' | sort -u)
 
   while IFS= read -r package_json; do
