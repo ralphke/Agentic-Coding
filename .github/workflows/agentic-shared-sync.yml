@@ -31,11 +31,20 @@ jobs:
           path: consumer
           fetch-depth: 1
 
+      - name: Normalize target version
+        id: version
+        env:
+          RAW_VERSION: ${{ inputs.target_version }}
+        run: |
+          version="${RAW_VERSION}"
+          [[ "${version}" == v* ]] || version="v${version}"
+          echo "target_version=${version}" >> "$GITHUB_OUTPUT"
+
       - name: Read consumer manifest
         id: manifest
         working-directory: consumer
         env:
-          TARGET_VERSION: ${{ inputs.target_version }}
+          TARGET_VERSION: ${{ steps.version.outputs.target_version }}
         run: |
           python -m pip install --disable-pip-version-check --quiet PyYAML
           python - <<'PY'
@@ -67,7 +76,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: ${{ steps.manifest.outputs.repository }}
-          ref: ${{ inputs.target_version }}
+          ref: ${{ steps.version.outputs.target_version }}
           path: shared-new
           fetch-depth: 1
 
@@ -80,19 +89,19 @@ jobs:
             --old-source shared-old \
             --new-source shared-new \
             --destination consumer \
-            --target-version '${{ inputs.target_version }}'
+            --target-version '${{ steps.version.outputs.target_version }}'
 
       - name: Open synchronization pull request
         uses: peter-evans/create-pull-request@v7
         with:
           path: consumer
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: chore/agentic-shared-${{ inputs.target_version }}
+          branch: chore/agentic-shared-${{ steps.version.outputs.target_version }}
           delete-branch: true
-          commit-message: "chore: sync agentic-shared ${{ inputs.target_version }}"
-          title: "chore: sync agentic-shared ${{ inputs.target_version }}"
+          commit-message: "chore: sync agentic-shared ${{ steps.version.outputs.target_version }}"
+          title: "chore: sync agentic-shared ${{ steps.version.outputs.target_version }}"
           body: |
-            Updates shared agentic assets to `${{ inputs.target_version }}`.
+            Updates shared agentic assets to `${{ steps.version.outputs.target_version }}`.
 
             The sync validator ran with three-way conflict detection against
             [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared).
