@@ -40,8 +40,17 @@ jobs:
         run: |
           version="${RAW_VERSION}"
           if [[ -z "${version}" ]]; then
-            version="$(gh release view --repo ralphke/agentic-shared --json tagName --jq '.tagName')"
-            echo "No version specified; resolved latest release: ${version}"
+            # Try GitHub Releases first; fall back to the latest git tag.
+            version="$(gh release list --repo ralphke/agentic-shared --limit 1 --json tagName --jq '.[0].tagName // empty' 2>/dev/null || true)"
+            if [[ -z "${version}" ]]; then
+              version="$(gh api repos/ralphke/agentic-shared/tags --paginate --jq '.[].name' 2>/dev/null | sort -V | tail -n1 || true)"
+            fi
+            if [[ -z "${version}" ]]; then
+              echo "No version specified and no releases or tags found in ralphke/agentic-shared."
+              echo "Please provide a target_version or publish a release/tag in the upstream repository."
+              exit 1
+            fi
+            echo "No version specified; resolved latest: ${version}"
           fi
           [[ "${version}" == v* ]] || version="v${version}"
           echo "target_version=${version}" >> "$GITHUB_OUTPUT"
