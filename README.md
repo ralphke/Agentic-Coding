@@ -136,9 +136,11 @@ The workshop content is curated from:
 
 ## Shared agentic assets
 
-Reusable Software Fabric workflows, templates, prompts, instructions, agents, and skills are now sourced from [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared). Use `.github/workflows/sync-agentic-shared.yml` to pull the canonical shared content into this repository.
+Reusable Software Fabric workflows, prompts, instructions, agents, and skills are owned upstream in [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared) and consumed here by pinned version, declared in [`.agentic-shared.yml`](.agentic-shared.yml).
 
-Workshop-specific labs, documentation, and environment setup remain owned locally in this repository.
+To pull in an upstream change, run the [`Sync Agentic Shared Assets`](.github/workflows/agentic-shared-sync.yml) workflow (`workflow_dispatch`) with the target release tag. It checks out the currently installed and target releases, three-way-diffs each managed asset group, and opens a pull request — nothing is written to `main` without repo-owner review and approval. See [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared) for the source definitions and release notes.
+
+Workshop-specific labs, documentation, environment setup, and anything under `local/` subfolders (e.g. `.github/skills/local/`) remain owned locally in this repository and are never touched by the sync.
 
 ## Repository layout
 
