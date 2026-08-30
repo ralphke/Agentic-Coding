@@ -54,12 +54,12 @@ attacks to pass undetected:
   dependency finding.
 - [ ] `sdlc-orchestrator.yml` phantom package check runs on every `stage:security` PR and
   blocks merge if any dependency is not found on PyPI or npm.
-- [ ] `supply-chain-verification.yml` workflow runs on every PR and generates a
+- [ ] `security.yml` workflow runs on every PR and generates a
   CycloneDX SBOM, uploads it as a build artifact, and runs Grype vulnerability scan.
-- [ ] `supply-chain-verification.yml` detects and blocks dependency confusion attacks
+- [ ] `security.yml` detects and blocks dependency confusion attacks
   by verifying each package name against the official registry.
-- [ ] `supply-chain-verification.yml` verifies lockfile integrity (hash pinning).
-- [ ] `supply-chain-verification.yml` warns on container images that lack digest pinning.
+- [ ] `security.yml` verifies lockfile integrity (hash pinning).
+- [ ] `security.yml` warns on container images that lack digest pinning.
 - [ ] `security-engineer.md` instructions include supply chain section with SBOM,
   dependency confusion, and lockfile requirements.
 - [ ] `security-engineer.md` checklist includes enforceability items for all new controls.
@@ -78,4 +78,4 @@ to assess the baseline before enabling on all PRs.
 **Rollback:** Revert the three changed files:
 - `.github/workflows/sdlc-orchestrator.yml`
 - `.github/agents/security-engineer.md`
-- `.github/workflows/supply-chain-verification.yml` (delete)
+- `.github/workflows/security.yml`

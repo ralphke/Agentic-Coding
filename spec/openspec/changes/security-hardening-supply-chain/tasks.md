@@ -29,7 +29,7 @@
 
 ## Phase 2 — High: Supply Chain Verification Workflow (P1)
 
-- [x] **T10** — Create `.github/workflows/supply-chain-verification.yml` triggered on
+- [x] **T10** — Create `.github/workflows/security.yml` triggered on
   every PR and push to main, plus weekly schedule.
 - [x] **T11** — Add SBOM generation job using `anchore/syft:v1.4.1` (pinned), output
   CycloneDX JSON. Upload as PR artifact with 90-day retention.
@@ -99,11 +99,11 @@ Before closing this change:
 - [x] `sdlc-orchestrator.yml` — security gate has no `continue-on-error: true`
 - [x] `sdlc-orchestrator.yml` — gitleaks scans full branch history
 - [x] `sdlc-orchestrator.yml` — phantom package check for PyPI and npm
-- [x] `supply-chain-verification.yml` — SBOM generated and uploaded as artifact
-- [x] `supply-chain-verification.yml` — Grype blocks on HIGH/CRITICAL
-- [x] `supply-chain-verification.yml` — dependency confusion detection job present
-- [x] `supply-chain-verification.yml` — lockfile integrity job present
-- [x] `supply-chain-verification.yml` — container image pinning check present
+- [x] `security.yml` — SBOM generated and uploaded as artifact
+- [x] `security.yml` — Grype blocks on HIGH/CRITICAL
+- [x] `security.yml` — dependency confusion detection job present
+- [x] `security.yml` — lockfile integrity job present
+- [x] `security.yml` — container image pinning check present
 - [x] `security-engineer.md` — supply chain checklist added
 - [x] `security-engineer.md` — SBOM, gitleaks, grype, phantom check in SAST tools section
 - [x] `security-engineer.md` — updated security report format
