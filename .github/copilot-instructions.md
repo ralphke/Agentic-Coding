@@ -2,7 +2,7 @@
 
 ## Repository snapshot
 
-This repository contains a GitHub Copilot workshop scaffold with beginner, intermediate, and advanced learning paths.
+This repository contains a GitHub Copilot SDLC concept of reusable agentic SDLC assets. It can also be used as workshop scaffolding with beginner, intermediate, and advanced learning paths.
 
 Primary workshop artifacts:
 
@@ -19,9 +19,17 @@ Primary workshop artifacts:
 - spec/example-feature-spec.md
 - .devcontainer/devcontainer.json
 - .devcontainer/post-create.sh
-- .github/ISSUE_TEMPLATE/copilot-task.yml
 - .github/workflows/ci.yml
 - .github/workflows/copilot-task-router.yml
+- .github/workflows/sdlc-orchestrator.yml
+- .github/ISSUE_TEMPLATE/
+- .github/agents/
+- .github/skills/
+- .github/prompts/
+- .github/workflows/
+- .github/instructions/
+- .github/copilot-instructions.md
+- spec/openspec/
 
 ## Commands
 
