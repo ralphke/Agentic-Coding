@@ -1,4 +1,5 @@
 {
+  // TODO: Register the centrally hosted Customers Secure Coding MCP here when the BCP endpoint and authentication details are available.
   "servers": {
     "openspec-filesystem": {
       "type": "stdio",
@@ -31,7 +32,7 @@
       "password": true
     }
   ],
-  " comments": {
+  "comments": {
     "openspec-cli": "The OpenSpec CLI (npm install -g @fission-ai/openspec) provides the /opsx:* commands. It is NOT an MCP server — install it globally and use via VS Code Copilot chat slash commands.",
     "openspec-setup": [
       "Install: npm install -g @fission-ai/openspec@latest",

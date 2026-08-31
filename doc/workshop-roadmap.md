@@ -57,6 +57,7 @@ All modules should reference and adapt ideas from:
 - [VS Code .github examples for workflow style](https://github.com/microsoft/vscode/tree/main/.github)
 - [OpenSpec: spec-driven agentic development framework](https://github.com/Fission-AI/OpenSpec)
 - [Agentic DevOps in action](https://developer.microsoft.com/blog/reimagining-every-phase-of-the-developer-lifecycle)
+- [Muster an Universal Control Plane for AI Agents and MCP-Server Automation](https://github.com/giantswarm/muster)
 
 ## Contribution rules for this workshop
 
