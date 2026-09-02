@@ -4,7 +4,12 @@ description: >
   Implement a Software Fabric change end-to-end through the persona pipeline:
   Architect (design+tasks) → Developer (code) → QA (tests). 
   Runs autonomously through all implementation stages.
-tools: [execute/getTerminalOutput, execute/sendToTerminal, execute/runInTerminal, read, edit/createDirectory, edit/createFile, edit/editFiles, search, web, azure-mcp/search, 'openspec-filesystem/*', 'github/*', todo]
+tools:
+  - filesystem
+  - search/codebase
+  - edit/editFiles
+  - execute/getTerminalOutput,execute/runInTerminal,read/terminalLastCommand,read/terminalSelection
+  - github/*
 ---
 
 # `/opsx:apply` — Implement a Change
@@ -22,7 +27,7 @@ Check which stage the change is currently in and continue from there.
 
 ## Stage 1: Architect (if `design.md` missing)
 
-Act as **Systems Architect Agent** (`.github/agents/architect.agent.md`).
+Act as **Systems Architect Agent** (`.github/agents/architect.md`).
 Apply skill: `.github/skills/spec-to-design.md`
 
 - Read `proposal.md` and existing codebase structure
@@ -32,7 +37,7 @@ Apply skill: `.github/skills/spec-to-design.md`
 
 ## Stage 2: Developer (if implementation tasks unchecked)
 
-Act as **Developer Agent** (`.github/agents/developer.agent.md`).
+Act as **Developer Agent** (`.github/agents/developer.md`).
 
 - Read `design.md` and `tasks.md`
 - Implement each unchecked implementation task in order
@@ -42,7 +47,7 @@ Act as **Developer Agent** (`.github/agents/developer.agent.md`).
 
 ## Stage 3: QA Engineer (if testing tasks unchecked)
 
-Act as **QA Engineer Agent** (`.github/agents/qa-engineer.agent.md`).
+Act as **QA Engineer Agent** (`.github/agents/qa-engineer.md`).
 Apply skill: `.github/skills/test-generation.md`
 
 - Read all spec scenarios from `specs/<domain>/spec.md`

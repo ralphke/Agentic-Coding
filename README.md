@@ -1,13 +1,12 @@
-# GitHub Copilot SDLC Workshop
+# GitHub Copilot Software Fabric - Autonomous SDLC and Workshops
 
-This repository hosts a hands-on workshop for beginner, intermediate, and advanced developers to learn how to use GitHub Copilot effectively in conjunction with the Softwrae Development life-circle (SDLC).
+This repository hosts a hands-on workshop for beginner, intermediate, and advanced developers to learn how to use GitHub Copilot effectively.
 
 ## Learning goals
 
 - Build practical Copilot habits for everyday coding.
 - Move from prompt quality and pair-programming fundamentals to agentic workflows.
 - End with an automated issue-to-Copilot flow where tasks can be handled autonomously.
-- Provide a structured, SDLC driven, agentic development process.
 
 ## Workshop tracks
 
@@ -136,11 +135,9 @@ The workshop content is curated from:
 
 ## Shared agentic assets
 
-Reusable Software Fabric workflows, prompts, instructions, agents, and skills are owned upstream in [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared) and consumed here by pinned version, declared in [`.agentic-shared.yml`](.agentic-shared.yml).
+Reusable Software Fabric workflows, templates, prompts, instructions, agents, and skills are now sourced from [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared). Use `.github/workflows/sync-agentic-shared.yml` to pull the canonical shared content into this repository.
 
-To pull in an upstream change, run the [`Sync Agentic Shared Assets`](.github/workflows/agentic-shared-sync.yml) workflow (`workflow_dispatch`) with the target release tag. It checks out the currently installed and target releases, three-way-diffs each managed asset group, and opens a pull request — nothing is written to `main` without repo-owner review and approval. See [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared) for the source definitions and release notes.
-
-Workshop-specific labs, documentation, environment setup, and anything under `local/` subfolders (e.g. `.github/skills/local/`) remain owned locally in this repository and are never touched by the sync.
+Workshop-specific labs, documentation, and environment setup remain owned locally in this repository.
 
 ## Repository layout
 
@@ -152,31 +149,55 @@ Workshop-specific labs, documentation, environment setup, and anything under `lo
 - spec: optional specification for exercises.
 - test: optional validation tests for exercises.
 
-## Devcontainer configuration and mode switching
+## Devcontainer vs manual Docker build
 
-This repository uses schema-valid, explicit devcontainer templates.
+This repository uses `.devcontainer/devcontainer.json` as the primary VS Code container definition for the normal workshop workflow.
 
-- `.devcontainer/devcontainer-build.json`: local Dockerfile build template.
-- `.devcontainer/devcontainer-prebuilt.json`: GHCR image template.
-- `.devcontainer/devcontainer.json`: active config used by VS Code Dev Containers.
-- `.devcontainer/devcontainer.local.json`: optional local-mount variant.
+- `devcontainer.json` is the source of truth for VS Code devcontainer opens and rebuilds.
+- `.devcontainer/docker-compose.yml` and `.devcontainer/Dockerfile.security-fix` are optional manual build helpers.
+- `.devcontainer/docker-compose.local.yml` is an optional local override for developer testing.
+- The manual compose path is aligned to the same base image as `devcontainer.json`; keep `Dockerfile.security-fix` updated if the devcontainer base image changes.
+- Prefer the `devcontainer.json` path unless you explicitly need a custom Docker compose build.
 
-Switch modes with the workflow helper:
+Local testing workflow with the override file:
 
-```bash
-bash .devcontainer/devcontainer-workflow.sh use-local
-bash .devcontainer/devcontainer-workflow.sh use-prebuilt
+```powershell
+docker compose -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.local.yml build --no-cache
+docker compose -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.local.yml up -d
 ```
 
-Build and publish the devcontainer image with the same workflow helper:
+This keeps the default compose file pinned to the hardened GHCR image while still allowing quick local rebuilds.
 
-```bash
-bash .devcontainer/devcontainer-workflow.sh build-and-push latest
+### Push local image to GHCR
+
+Use the PowerShell helper script to push `agentic-coding-image:latest` to GitHub Container Registry:
+
+```powershell
+./scripts/push-ghcr-image.ps1 -Owner <github-owner>
 ```
 
-After switching modes, rebuild the container from VS Code.
+Authentication options:
 
-The canonical image name for local and CI publish paths is `ghcr.io/<owner>/agentic-coding-image`.
+- Set `GITHUB_TOKEN` in your shell (recommended for CI and local automation).
+- Or sign in with GitHub CLI (`gh auth login`), then the script can use `gh auth token`.
+
+Required token scopes for GHCR push:
+
+- `write:packages`
+- `read:packages`
+
+Explicit token usage example (PowerShell):
+
+```powershell
+$env:GITHUB_TOKEN = "<github_pat_with_write_packages>"
+./scripts/push-ghcr-image.ps1 -Owner <github-owner>
+```
+
+Optional SHA tag push:
+
+```powershell
+./scripts/push-ghcr-image.ps1 -Owner <github-owner> -PushShaTag -ShaTag <commit-sha>
+```
 
 ## Prerequisites
 

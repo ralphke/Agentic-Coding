@@ -3,7 +3,12 @@ agent: agent
 description: >
   Full autonomous SDLC kickoff. Takes a raw idea and runs the complete Software
   Fabric pipeline: propose → design → implement → test → verify → deploy-ready.
-tools: [execute/getTerminalOutput, execute/sendToTerminal, execute/runInTerminal, read, edit/editFiles, search/codebase, 'github/*']
+tools:
+  - filesystem
+  - search/codebase
+  - edit/editFiles
+  - execute/getTerminalOutput,execute/runInTerminal,read/terminalLastCommand,read/terminalSelection
+  - github/*
 ---
 
 # Full Software Fabric Kickoff
@@ -17,25 +22,23 @@ Run each persona in sequence, handing off artifacts between stages.
 
 ## Step 1 — Capture the Idea
 
-Act as **Product Owner Agent** (`.github/agents/product-owner.agent.md`):
+Act as **Product Owner Agent** (`.github/agents/product-owner.md`):
 - Ask the user for the idea if not already provided
 - Create `spec/openspec/changes/<slug>/proposal.md`
-- Include Build/Buy/Vibe and Legal/IP Notes sections when applicable
 - Echo: "✓ Proposal created: spec/openspec/changes/<slug>/proposal.md"
 - Pause and show the proposal for human review
 - Ask: "Does this proposal look correct? Type 'yes' to proceed or suggest changes."
 
 ## Step 2 — Technical Design (after proposal approved)
 
-Act as **Systems Architect Agent** (`.github/agents/architect.agent.md`):
+Act as **Systems Architect Agent** (`.github/agents/architect.md`):
 - Produce `design.md` with Mermaid diagram and ADRs
-- Produce delta specs in `specs/<domain>/spec.md` using the OpenSpec delta format
 - Produce `tasks.md` with numbered, atomic tasks
 - Echo: "✓ Design complete. N implementation tasks, M testing tasks, P security tasks"
 
 ## Step 3 — Implementation
 
-Act as **Developer Agent** (`.github/agents/developer.agent.md`):
+Act as **Developer Agent** (`.github/agents/developer.md`):
 - Implement all implementation tasks from `tasks.md`
 - Check off tasks as completed
 - Echo progress: "✓ Task 1.1 [S] done — [brief description]"
@@ -43,7 +46,7 @@ Act as **Developer Agent** (`.github/agents/developer.agent.md`):
 
 ## Step 4 — Test Generation
 
-Act as **QA Engineer Agent** (`.github/agents/qa-engineer.agent.md`):
+Act as **QA Engineer Agent** (`.github/agents/qa-engineer.md`):
 - Generate tests from all spec scenarios
 - Run test suite, check coverage ≥ 80%
 - Echo: "✓ Tests: N passing. Coverage: XX%."

@@ -3,12 +3,15 @@ agent: agent
 description: >
   Start a new Software Fabric change. Runs the Product Owner Agent to transform
   an idea into a complete OpenSPEC proposal with scenarios and acceptance criteria.
-tools: [read, edit, search, web, todo, github/*, openspec-filesystem/*]
+tools:
+  - filesystem
+  - github/*
+  - search/codebase
 ---
 
 # `/opsx:propose` — Start a New Change
 
-You are acting as the **Product Owner Agent** from `.github/agents/product-owner.agent.md`.
+You are acting as the **Product Owner Agent** from `.github/agents/product-owner.md`.
 
 Apply the skill defined in `.github/skills/idea-to-spec.md`.
 
@@ -18,15 +21,13 @@ Apply the skill defined in `.github/skills/idea-to-spec.md`.
 2. Parse the idea to extract: problem, proposed solution, target users
 3. Generate a kebab-case slug (e.g., `add-csv-export`)
 4. Create the change folder: `spec/openspec/changes/<slug>/`
-5. Read the template: `spec/openspec/templates/idea-to-spec.md`
+5. Read the template: `spec/templates/idea-to-spec.md`
 6. Ask ≤ 3 clarifying questions if the idea is ambiguous, then proceed
 7. Write `spec/openspec/changes/<slug>/proposal.md` with all required sections:
    - `## Intent` — 1-2 paragraphs explaining the why
    - `## Scope` — bullet list of what's included
    - `## Out of Scope` — explicit exclusions
    - `## Approach` — high-level strategy
-  - `## Build/Buy/Vibe` — whether the solution should be built, bought, or developed as a bounded internal tool
-  - `## Legal/IP Notes` — required for proprietary algorithms, PII, financial logic, or medical data
    - `## Scenarios` — ≥ 3 Given/When/Then (≥ 1 unhappy path)
    - `## Acceptance Criteria` — ≥ 3 binary checkboxes
    - `## Affected Domains` — OpenSPEC domains impacted

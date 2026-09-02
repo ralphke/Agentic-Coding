@@ -41,12 +41,12 @@ Eight specialized AI agent persona definitions:
 - `sdlc-fabric.instructions.md` — Applied globally
 
 ### Skills (`.github/skills/`)
-- `idea-to-spec.md` — Product Owner skill
-- `spec-to-design.md` — Architect skill
-- `test-generation.md` — QA Engineer skill
-- `security-review.md` — Security Engineer skill
-- `pr-review.md` — Code Reviewer skill
-- `deploy-pipeline.md` — DevOps/SRE skill
+- `idea-to-spec/skill.md` — Product Owner skill
+- `spec-to-design/skill.md` — Architect skill
+- `test-generation/skill.md` — QA Engineer skill
+- `security-review/skill.md` — Security Engineer skill
+- `pr-review/skill.md` — Code Reviewer skill
+- `deploy-pipeline/skill.md` — DevOps/SRE skill
 
 ### Prompts (`.github/prompts/`)
 - `opsx-propose.prompt.md` — Start a new change

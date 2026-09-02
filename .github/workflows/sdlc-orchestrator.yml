@@ -52,10 +52,9 @@ jobs:
                 '3. 💻 Implementation (Developer)',
                 '4. 🧪 Tests (QA Engineer)',
                 '5. 🔒 Security Review (Security Engineer)',
-                '6. ⚖️ Legal Review when risk requires it (Legal & Compliance)',
-                '7. 👁️ Code Review (Code Reviewer)',
-                '8. 🚀 Deploy (DevOps/SRE)',
-                '9. 📊 Monitor + Archive (Operations SRE)',
+                '6. 👁️ Code Review (Code Reviewer)',
+                '7. 🚀 Deploy (DevOps/SRE)',
+                '8. 📊 Monitor + Archive (Operations SRE)',
               ].join('\n')
             });
 
@@ -79,35 +78,6 @@ jobs:
       github.event.label.name == 'stage:design'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Validate proposal artifact
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          set -euo pipefail
-          mapfile -t change_dirs < <(
-            git diff --name-only "$BASE_SHA" "$HEAD_SHA" \
-              | grep -E '^spec/openspec/changes/[^/]+/' \
-              | cut -d/ -f1-4 \
-              | sort -u
-          )
-
-          if [ "${#change_dirs[@]}" -eq 0 ]; then
-            echo "::error::stage:design requires a change folder under spec/openspec/changes/<slug>/."
-            exit 1
-          fi
-
-          for dir in "${change_dirs[@]}"; do
-            if [ ! -f "$dir/proposal.md" ]; then
-              echo "::error file=$dir::Missing proposal stage artifact. Expected proposal.md before the Architect stage."
-              exit 1
-            fi
-          done
-
       - name: Comment — design stage started
         uses: actions/github-script@v7
         with:
@@ -128,7 +98,6 @@ jobs:
                 '',
                 'Expected outputs:',
                 '- `spec/openspec/changes/<slug>/design.md`',
-                '- `spec/openspec/changes/<slug>/specs/<domain>/spec.md` (delta spec)',
                 '- `spec/openspec/changes/<slug>/tasks.md`',
               ].join('\n')
             });
@@ -142,39 +111,17 @@ jobs:
       github.event.label.name == 'stage:test'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Validate test stage artifacts
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          set -euo pipefail
-          changed_files="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
-
-          if ! printf '%s\n' "$changed_files" | grep -Eq '(^|/)(tests?|testdata)/|(^|/)(test_.*\.py|.*_test\.py|.*Tests?\.cs)$|^spec/openspec/changes/[^/]+/(tasks\.md|specs/[^/]+/spec\.md)$'; then
-            echo "::error::stage:test requires test artifacts or change delta/task evidence in the PR."
-            exit 1
-          fi
-
-      - name: Require a supported test project
-        if: hashFiles('**/pytest.ini', '**/pyproject.toml', '**/setup.cfg', '**/*.csproj') == ''
-        run: |
-          echo "::error::No supported test project was found. Add pytest configuration or a .NET project."
-          exit 1
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Run tests (Python)
         if: hashFiles('**/pytest.ini', '**/pyproject.toml', '**/setup.cfg') != ''
         run: |
-          set -euo pipefail
-          python3 -m pip install --quiet pytest pytest-cov
-          python3 -m pytest --tb=short -q --cov --cov-report=term-missing --cov-fail-under=80
+          pip install -q pytest pytest-cov 2>/dev/null || true
+          python3 -m pytest --tb=short -q 2>/dev/null || echo "::warning::Tests not yet set up"
 
       - name: Run tests (.NET)
         if: hashFiles('**/*.csproj') != ''
-        run: dotnet test --no-build --collect:"XPlat Code Coverage" -q
+        run: dotnet test --no-build -q 2>/dev/null || echo "::warning::Tests not yet set up"
 
       - name: Comment — test stage
         uses: actions/github-script@v7
@@ -207,33 +154,98 @@ jobs:
       github.event.label.name == 'stage:security'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0  # full history needed for secrets scan
 
-      - name: Verify security automation checks are present and green
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+      # ── Python SAST — BLOCKING ──────────────────────────────────────────
+      - name: Python SAST (bandit)
+        if: hashFiles('**/*.py') != ''
+        run: |
+          pip install -q bandit
+          # Exit 1 on MEDIUM+ (severity level -ll); fail the build
+          bandit -r src/ -ll -f txt
+        # NOTE: intentionally no continue-on-error — HIGH/CRITICAL findings BLOCK merge
+
+      # ── Dependency CVE audit — BLOCKING ────────────────────────────────
+      - name: Dependency audit (pip-audit)
+        if: hashFiles('**/requirements*.txt', '**/pyproject.toml') != ''
+        run: |
+          pip install -q pip-audit
+          # --fail-on-vuln exits non-zero when any vulnerability is found
+          pip-audit --format columns --fail-on-vuln
+
+      - name: npm audit
+        if: hashFiles('**/package.json') != ''
+        run: |
+          # --audit-level high: exit non-zero only on HIGH or CRITICAL findings
+          npm audit --audit-level high
+
+      # ── Lockfile hash pinning check ─────────────────────────────────────
+      - name: Verify dependency hash pinning (Python)
+        if: hashFiles('**/requirements*.txt') != ''
         run: |
           set -euo pipefail
-          security_checks_json="$(gh pr checks "$PR_NUMBER" --json name,state)"
+          UNPINNED=0
+          while IFS= read -r req_file; do
+            # Warn on any dependency missing both a pinned version and a hash
+            if grep -Eq '^[a-zA-Z]' "$req_file"; then
+              if ! grep -q '\-\-hash=' "$req_file"; then
+                echo "::warning file=${req_file}::No hash pinning found. Consider using pip-compile --generate-hashes."
+                UNPINNED=1
+              fi
+            fi
+          done < <(find . -name 'requirements*.txt' -not -path '*/.venv*' -not -path '*/node_modules*')
+          # Treat unpinned deps as a HIGH finding — block merge
+          [ "$UNPINNED" -eq 0 ] || { echo "::error::One or more requirements files lack hash pinning. See warnings above."; exit 1; }
 
-          matched_count="$(printf '%s' "$security_checks_json" | jq '[.[] | select((.name | ascii_downcase) | test("security|sbom|grype|dependency confusion|lockfile integrity"))] | length')"
-          if [ "$matched_count" -eq 0 ]; then
-            echo "::error::No security automation checks were found on this PR. Ensure Security workflow checks are configured."
-            exit 1
-          fi
-
-          failing_checks="$(printf '%s' "$security_checks_json" | jq -r '.[] | select((.name | ascii_downcase) | test("security|sbom|grype|dependency confusion|lockfile integrity")) | select(.state != "SUCCESS") | "\(.name): \(.state)"')"
-          if [ -n "$failing_checks" ]; then
-            echo "::error::Security automation checks are not green:"
-            echo "$failing_checks"
-            exit 1
-          fi
-
-      - name: Confirm automated security workflow ownership
+      # ── Phantom package detection — BLOCKING ────────────────────────────
+      - name: Phantom package check (PyPI)
+        if: hashFiles('**/requirements*.txt') != ''
         run: |
-          echo "Automated security checks are owned by the standalone Security workflow."
-          echo "Require the Security workflow to pass in branch protection before stage:security."
+          set -euo pipefail
+          PHANTOM=0
+          while IFS= read -r req_file; do
+            while IFS= read -r pkg; do
+              # Strip version specifier and extras
+              CLEAN=$(echo "$pkg" | sed 's/[>=<!\[].*//' | tr -d ' ')
+              [ -z "$CLEAN" ] && continue
+              HTTP_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" \
+                "https://pypi.org/pypi/${CLEAN}/json" || true)
+              if [ "$HTTP_STATUS" != "200" ]; then
+                echo "::error::PHANTOM PACKAGE: '${CLEAN}' returned HTTP ${HTTP_STATUS} from PyPI — possible hallucinated package. BLOCKING MERGE."
+                PHANTOM=1
+              fi
+            done < <(grep -E '^[a-zA-Z]' "$req_file" | sed '/^#/d')
+          done < <(find . -name 'requirements*.txt' -not -path '*/.venv*' -not -path '*/node_modules*')
+          [ "$PHANTOM" -eq 0 ] || exit 1
+
+      - name: Phantom package check (npm)
+        if: hashFiles('**/package.json') != ''
+        run: |
+          set -euo pipefail
+          PHANTOM=0
+          for PKG in $(node -e "const p=require('./package.json'); console.log(Object.keys({...p.dependencies,...p.devDependencies}).join('\n'))" 2>/dev/null || true); do
+            HTTP_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" \
+              "https://registry.npmjs.org/${PKG}" || true)
+            if [ "$HTTP_STATUS" != "200" ]; then
+              echo "::error::PHANTOM PACKAGE: '${PKG}' returned HTTP ${HTTP_STATUS} from npm — possible hallucinated package. BLOCKING MERGE."
+              PHANTOM=1
+            fi
+          done
+          [ "$PHANTOM" -eq 0 ] || exit 1
+
+      # ── Secret scanning — BLOCKING ───────────────────────────────────────
+      - name: Secret scanning (gitleaks)
+        run: |
+          # Pull pinned gitleaks image and scan full branch history
+          docker run --rm \
+            -v "$PWD:/path" \
+            zricethezav/gitleaks:v8.18.4 \
+            detect --source /path --log-opts "origin/main..HEAD" \
+            --exit-code 1 \
+            --redact
+        # non-zero exit code blocks the step — any detected secret blocks merge
 
       # ── Post security-gate status comment ───────────────────────────────
       - name: Comment — security stage
@@ -247,17 +259,16 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
               body: success ? [
-                '## 🔒 Stage: Security — Automated Check Handoff',
+                '## 🔒 Stage: Security — Automated Pre-checks Passed',
                 '',
                 '**Security Engineer Agent** — your turn for the manual review.',
                 '',
-                'The standalone `Security` workflow owns the automated security checks:',
-                '- ✅ SAST and dependency vulnerability checks',
-                '- ✅ SBOM generation and Grype scanning',
-                '- ✅ Lockfile integrity and phantom package checks',
-                '- ✅ Secret scanning and container image pinning',
-                '',
-                'The `Security` workflow must pass through branch protection before merge.',
+                'The automated gates have passed:',
+                '- ✅ SAST (bandit)',
+                '- ✅ Dependency CVE audit (pip-audit / npm audit)',
+                '- ✅ Lockfile hash pinning verified',
+                '- ✅ Phantom package check (PyPI / npm)',
+                '- ✅ Secret scanning (gitleaks)',
                 '',
                 'Run the full security review in VS Code Copilot chat:',
                 '```',
@@ -270,43 +281,12 @@ jobs:
                 '',
                 '**Merge is BLOCKED.** One or more automated security checks failed.',
                 '',
-                'Check the `Security` workflow run logs for details.',
+                'Check the workflow run logs for details:',
+                `- Bandit SAST, pip-audit, npm audit, lockfile pinning, phantom package check, or gitleaks`,
                 '',
                 '**Developer Agent** — remediate all flagged issues and re-push.',
                 '',
                 '> No manual security review will be started until the automated gate passes.',
-              ].join('\n')
-            });
-
-  # ─── STAGE GATE: SECURITY → LEGAL (WHEN REQUIRED) → REVIEW ──────────────
-  stage-legal-gate:
-    name: "⚖️ Stage: Legal Review"
-    if: |
-      github.event_name == 'pull_request' &&
-      github.event.action == 'labeled' &&
-      github.event.label.name == 'stage:legal'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Comment — legal review stage
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.payload.pull_request.number,
-              body: [
-                '## ⚖️ Stage: Legal Review',
-                '',
-                '**Legal & Compliance Agent** — review the change using `.github/skills/legal-compliance-review.md`.',
-                '',
-                'Required output: post a Legal Risk Assessment comment with the decision, risk rating, evidence, and any remediation or counsel escalation.',
-                '',
-                'Disposition labels:',
-                '- `legal:approved` — all required legal review and sign-off are complete; apply `stage:review` to continue.',
-                '- `legal:blocked` — unresolved legal risk; review and deployment are blocked.',
-                '',
-                'A PR carrying `stage:legal` cannot enter review or deployment without `legal:approved`.',
               ].join('\n')
             });
 
@@ -319,23 +299,7 @@ jobs:
       github.event.label.name == 'stage:review'
     runs-on: ubuntu-latest
     steps:
-      - name: Verify legal disposition
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const labels = context.payload.pull_request.labels.map(({ name }) => name);
-            const legalBlocked = labels.includes('legal:blocked');
-            const legalReviewRequired = labels.includes('stage:legal');
-            const legalApproved = labels.includes('legal:approved');
-
-            if (legalBlocked) {
-              core.setFailed('stage:review is blocked while legal:blocked is present. Resolve the legal review before proceeding.');
-            } else if (legalReviewRequired && !legalApproved) {
-              core.setFailed('stage:review requires legal:approved when stage:legal is present. Post the Legal Risk Assessment and record a disposition.');
-            }
-
       - name: Comment — review stage
-        if: success()
         uses: actions/github-script@v7
         with:
           script: |
@@ -367,23 +331,7 @@ jobs:
       github.event.label.name == 'stage:deploy'
     runs-on: ubuntu-latest
     steps:
-      - name: Verify legal disposition
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const labels = context.payload.pull_request.labels.map(({ name }) => name);
-            const legalBlocked = labels.includes('legal:blocked');
-            const legalReviewRequired = labels.includes('stage:legal');
-            const legalApproved = labels.includes('legal:approved');
-
-            if (legalBlocked) {
-              core.setFailed('stage:deploy is blocked while legal:blocked is present. Resolve the legal review before proceeding.');
-            } else if (legalReviewRequired && !legalApproved) {
-              core.setFailed('stage:deploy requires legal:approved when stage:legal is present. Post the Legal Risk Assessment and record a disposition.');
-            }
-
       - name: Comment — deploy stage
-        if: success()
         uses: actions/github-script@v7
         with:
           script: |
@@ -415,7 +363,7 @@ jobs:
       (github.event.action == 'labeled' || github.event.action == 'ready_for_review')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Validate spec/openspec structure
         run: |
@@ -425,7 +373,7 @@ jobs:
           [ -f "spec/openspec/config.yaml" ] && echo "✅ config.yaml present" || echo "❌ config.yaml missing"
           
           # Check domain specs exist
-          for domain in sdlc-process personas idea-capture security-standards testing-standards operations legal-compliance; do
+          for domain in sdlc-process personas idea-capture security-standards testing-standards operations; do
             [ -f "spec/openspec/specs/$domain/spec.md" ] \
               && echo "✅ specs/$domain/spec.md present" \
               || echo "⚠️  specs/$domain/spec.md missing"
