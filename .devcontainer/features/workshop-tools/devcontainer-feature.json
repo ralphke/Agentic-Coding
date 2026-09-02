@@ -22,6 +22,11 @@
             "type": "boolean",
             "default": true,
             "description": "Install the GitHub Copilot CLI."
+        },
+        "installOpenSpec": {
+            "type": "boolean",
+            "default": true,
+            "description": "Install the OpenSpec CLI and its Node.js requirements."
         }
     }
 }

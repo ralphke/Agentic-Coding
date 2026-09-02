@@ -42,6 +42,7 @@ The recommended environment includes:
 - **.NET 10 SDK**
 - **.NET Aspire**
 - **Data API Builder (DAB)**
+- **OpenSpec CLI** (with Node.js LTS)
 - **Docker CLI**
 - Supporting VS Code extensions such as Python, C# Dev Kit, Docker, and GitHub Copilot
 
@@ -53,6 +54,7 @@ Run these commands in the devcontainer or Codespace terminal:
 python3 --version
 dotnet --version
 dab --version
+openspec --version
 docker version
 ```
 

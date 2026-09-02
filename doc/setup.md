@@ -92,6 +92,7 @@ Install and start **[Docker Desktop](https://www.docker.com/products/docker-desk
    python3 --version   # 3.14.x
    dotnet --version    # 10.0.x
    dab --version       # Data API Builder x.x.x
+   openspec --version  # OpenSpec CLI x.x.x
    ```
 
 ### Verification checklist (devcontainer)
@@ -101,4 +102,5 @@ Install and start **[Docker Desktop](https://www.docker.com/products/docker-desk
 - [ ] `python3 --version` shows 3.14.x
 - [ ] `dotnet --version` shows 10.0.x
 - [ ] `dab --version` shows a version number
+- [ ] `openspec --version` shows a version number
 - [ ] `docker version` shows the host Docker version

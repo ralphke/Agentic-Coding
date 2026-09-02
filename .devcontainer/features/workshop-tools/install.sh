@@ -30,6 +30,7 @@ rm -rf /var/lib/apt/lists/*
 INSTALL_DAB="${FEATURE_WORKSHOP_TOOLS_INSTALLDAB:-${FEATURE_WORKSHOP_TOOLS_INSTALL_DAB:-true}}"
 INSTALL_ASPIRE="${FEATURE_WORKSHOP_TOOLS_INSTALLASPIRE:-${FEATURE_WORKSHOP_TOOLS_INSTALL_ASPIRE:-true}}"
 INSTALL_COPILOT="${FEATURE_WORKSHOP_TOOLS_INSTALLCOPILOT:-${FEATURE_WORKSHOP_TOOLS_INSTALL_COPILOT:-true}}"
+INSTALL_OPENSPEC="${FEATURE_WORKSHOP_TOOLS_INSTALLOPENSPEC:-${FEATURE_WORKSHOP_TOOLS_INSTALL_OPENSPEC:-true}}"
 
 if [ "$INSTALL_DAB" = "false" ] || [ "$INSTALL_DAB" = "0" ]; then
   echo "[workshop-tools] Skipping Data API Builder installation"
@@ -86,6 +87,18 @@ else
     echo "[workshop-tools] WARNING: Copilot CLI install failed"
   fi
   rm -rf "$TMP_DIR"
+fi
+
+if [ "$INSTALL_OPENSPEC" = "false" ] || [ "$INSTALL_OPENSPEC" = "0" ]; then
+  echo "[workshop-tools] Skipping OpenSpec CLI installation"
+else
+  echo "[workshop-tools] Installing OpenSpec CLI..."
+  if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1 \
+    && npm install --global @fission-ai/openspec@latest; then
+    echo "[workshop-tools] OpenSpec CLI installed"
+  else
+    echo "[workshop-tools] WARNING: OpenSpec CLI installation failed; Node.js 20.19+ and npm are required"
+  fi
 fi
 
 echo "[workshop-tools] Build-time tool installation complete"

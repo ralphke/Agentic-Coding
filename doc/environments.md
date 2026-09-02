@@ -55,6 +55,7 @@ All three paths use the same `.devcontainer/devcontainer.json` — you get ident
 4. The post-create script runs automatically:
    - Installs `.NET Aspire` workload
    - Installs `dab` (Data API Builder) globally
+   - Installs the `openspec` CLI with Node.js LTS
    - Prints a version summary in the terminal
 5. Open a new terminal and verify:
 
@@ -62,6 +63,7 @@ All three paths use the same `.devcontainer/devcontainer.json` — you get ident
    python3 --version    # Python 3.14.x
    dotnet --version     # 10.0.x
    dab --version        # Data API Builder x.x.x
+   openspec --version   # OpenSpec CLI x.x.x
    docker version       # host Docker via socket
    ```
 

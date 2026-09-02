@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-set -u
+set -uo pipefail
 
-# Quick verification of build-time and runtime workshop tooling.
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR"
 
 pass_count=0
 fail_count=0
@@ -32,10 +33,19 @@ check_cmd() {
   fi
 }
 
-check_version() {
-  local label="$1"
+check_tool() {
+  local cmd="$1"
+  local label="$2"
   shift
-  if output=$("$@" 2>/dev/null | head -n 1); then
+  shift
+
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    fail "$label not found on PATH"
+    return
+  fi
+
+  pass "$label found at $(command -v "$cmd")"
+  if output=$("$@" 2>&1 | head -n 1) && [[ -n "$output" ]]; then
     pass "$label version: $output"
   else
     fail "$label version check failed"
@@ -44,21 +54,22 @@ check_version() {
 
 echo "=== Devcontainer smoke-check ==="
 
-check_cmd dab "Data API Builder (dab)"
-check_cmd aspire "Aspire CLI"
-check_cmd copilot "GitHub Copilot CLI"
-check_cmd potrace "Potrace"
-check_cmd bwrap "Bubblewrap"
-check_cmd trivy "Trivy"
-check_cmd node "Node.js"
-check_cmd npx "npx"
-check_cmd python3.14 "Python 3.14"
-check_cmd dotnet ".NET SDK"
-check_cmd docker "Docker"
+check_tool dab "Data API Builder (dab)" dab --version
+check_tool aspire "Aspire CLI" aspire --version
+check_tool copilot "GitHub Copilot CLI" copilot --version
+check_tool potrace "Potrace" potrace --version
+check_tool bwrap "Bubblewrap" bwrap --version
+check_tool trivy "Trivy" trivy --version
+check_tool node "Node.js" node --version
+check_tool npx "npx" npx --version
+check_tool openspec "OpenSpec CLI" openspec --version
+check_tool python3.14 "Python 3.14" python3.14 --version
+check_tool dotnet ".NET SDK" dotnet --version
+check_tool docker "Docker" docker --version
 
 if [[ -x .venv-linux/bin/python3 ]]; then
   pass ".venv-linux exists"
-  check_version ".venv-linux Python" .venv-linux/bin/python3 --version
+  check_tool .venv-linux/bin/python3 ".venv-linux Python" .venv-linux/bin/python3 --version
 else
   warn ".venv-linux not found (run post-create or rebuild container)"
 fi
@@ -71,18 +82,13 @@ if [[ -f src/requirements-dev.txt ]] && [[ -x .venv-linux/bin/python3 ]]; then
   fi
 fi
 
-check_version "dab" dab --version
-check_version "aspire" aspire --version
-check_version "copilot" copilot --version
-check_version "potrace" potrace --version
-check_version "bwrap" bwrap --version
-check_version "trivy" trivy --version
-check_version "node" node --version
-check_version "npx" npx --version
-check_version "python3.14" python3.14 --version
-check_version "dotnet" dotnet --version
-check_version "docker" docker --version
-check_version "Scout" bash -c "docker scout version | tail -2"
+if command -v docker >/dev/null 2>&1; then
+  if output=$(docker scout version 2>&1 | tail -n 1) && [[ -n "$output" ]]; then
+    pass "Docker Scout version: $output"
+  else
+    fail "Docker Scout version check failed"
+  fi
+fi
 
 echo ""
 echo "Summary: PASS=$pass_count WARN=$warn_count FAIL=$fail_count"
