@@ -119,7 +119,9 @@ flowchart LR
     class PO_LANE,SA_LANE,DEV_LANE,QA_LANE,SEC_LANE,REV_LANE,SRE_LANE,OPS_LANE role;
     class CI,SEC_GATE,PR_GATE,CD gate;
 ```
+
 ## Agentic SDLC process diagram
+
 ![Agentic SDLC Process Roles and responsibilities](image/Agentic-SDLC.png)
 
 The workshop content is curated from:
