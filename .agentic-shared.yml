@@ -1,6 +1,7 @@
 source:
   repository: ralphke/agentic-shared
-  version: v1.0.3
+  local-path: D:\\repros\\agentic-shared
+  version: v1.1.0
 assets:
   agents: managed
   skills: extended

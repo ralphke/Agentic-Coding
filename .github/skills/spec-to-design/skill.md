@@ -1,12 +1,13 @@
+---
+name: spec-to-design
+description: Convert an approved OpenSpec proposal into an executable technical design, delta specs, and ordered implementation tasks. Use for the design stage. Do not use for production code or bypassing proposal requirements.
+---
+
 # Skill: Spec to Technical Design
 
-**Description**
-- **USE FOR:** converting approved proposals into executable design and task decomposition.
-- **DO NOT USE FOR:** writing production code or bypassing proposal requirements.
-
 **Persona:** Systems Architect Agent
-**Input:** `spec/openspec/changes/<slug>/proposal.md` + existing codebase
-**Output:** `design.md`, `tasks.md` in the change folder
+**Input:** `openspec/changes/<slug>/proposal.md` + existing codebase
+**Output:** `design.md`, `tasks.md`, and delta specs in `specs/<domain>/spec.md`
 
 ---
 
@@ -20,7 +21,7 @@ Use when a PR/issue is labelled `stage:design` by the Product Owner Agent.
 
 1. **Read proposal.md** — Understand intent, scope, scenarios, and acceptance criteria
 2. **Analyse codebase** — Identify affected modules, existing patterns, integration points
-3. **Check existing specs** — Review relevant domain specs in `spec/openspec/specs/`
+3. **Check existing specs** — Review relevant domain specs in `openspec/specs/`
 4. **Build/Buy/Vibe decision** — Evaluate the Build/Buy/Vibe flag from the proposal.
    If Buy or Vibe is viable, create an ADR documenting the decision.
    Do not design custom engineering where a SaaS or bounded AI-generated tool suffices.
@@ -35,18 +36,23 @@ Use when a PR/issue is labelled `stage:design` by the Product Owner Agent.
    - `## API Contracts` — request/response shapes
    - `## ADRs` — one ADR per significant decision (including Build/Buy/Vibe if applicable)
    - `## Non-Functional Requirements` — perf, security, backward compat
-7. **Decompose tasks** — Write `tasks.md` with numbered, atomic, estimated tasks:
+7. **Write delta specs** — Translate the proposal's scenarios and acceptance
+   criteria into `specs/<domain>/spec.md` files using ADDED, MODIFIED, or REMOVED
+   sections. These are the requirements QA will consume and the archive workflow
+   will merge into the source-of-truth specs.
+8. **Decompose tasks** — Write `tasks.md` with numbered, atomic, estimated tasks:
    - Each task ≤ 1 day of work
    - Size labels: S (hours), M (half day), L (full day)
    - Ordered: dependencies come before dependents (Incremental Pattern — each task builds on verified output)
    - Include testing tasks (for QA Agent) and security tasks (for Security Agent)
-8. **Label PR** — Apply `stage:implement`
+9. **Label PR** — Apply `stage:implement`
 
 ---
 
 ## Quality Checks
 
 - [ ] design.md references every acceptance criterion in proposal.md
+- [ ] Delta specs represent every proposal scenario and acceptance criterion
 - [ ] Component diagram shows all new/changed components
 - [ ] All integration points identified
 - [ ] At least 1 ADR for each significant decision
@@ -89,3 +95,35 @@ Use when a PR/issue is labelled `stage:design` by the Product Owner Agent.
 - Use recent workflow-improvement findings to adjust task granularity and stage handoff quality.
 - If issue/PR history is sparse, prefer conservative decomposition and explicit dependency ordering.
 - Add one process improvement note to each design cycle when repeated friction appears.
+
+## Scripts & Tools
+
+- Use `openspec context --json` and the repository's existing validation commands.
+- Inspect the current source tree and main specs before selecting implementation patterns.
+
+## Rules & Guidelines
+
+- Start only from an approved proposal and preserve its scope and acceptance criteria.
+- Record architectural choices as ADRs when they affect system boundaries or technology selection.
+- Include QA, security, legal-risk, and operations handoff tasks where applicable.
+
+## Error Handling
+
+| Error | Cause | Fix |
+|---|---|---|
+| Missing proposal | Design was requested before proposal approval | Stop and return to the proposal stage |
+| Missing main spec | A delta targets an unknown requirement | Correct the requirement or update the main spec first |
+| Unclear dependency | Task order cannot be established | Document the dependency and split the task before handoff |
+
+## Scenarios & References
+
+- Use `openspec/specs/` as the source of truth for existing requirements.
+- Every new or modified requirement must include Given/When/Then scenarios.
+
+## Quick Reference
+
+| Task | Output |
+|---|---|
+| Design a change | `design.md` with decisions and affected components |
+| Define behavior | Delta spec with testable scenarios |
+| Plan delivery | Ordered `tasks.md` including test and security work |
