@@ -72,16 +72,19 @@ Start with these documents:
 ## What are the workshop tracks?
 
 ### Beginner
+
 - Prompt quality
 - Chat context
 - Safe code generation
 
 ### Intermediate
+
 - Tests and refactoring
 - Review loops
 - Structured spec-driven development
 
 ### Advanced
+
 - Issue-driven automation
 - CI/CD with Copilot
 - Agentic SDLC workflows
@@ -98,6 +101,8 @@ Here, **agentic** means working with Copilot as an implementation partner that c
 
 OpenSPEC is the structured specification model used in this repository’s advanced workflows. It helps define work through artifacts such as proposals, designs, and task lists so both humans and agents can work from shared context.
 
+The OpenSpec CLI is the operational entry point. Use `openspec context --json` to resolve the active root, `openspec list --json` to inspect changes, and the repository command skills under `.github/skills/` to propose, apply, verify, sync, and archive changes.
+
 ## How is work organized in the repository?
 
 The main structure is:
@@ -111,7 +116,7 @@ The main structure is:
 
 ---
 
-# Maintainer FAQ
+## Maintainer FAQ
 
 ## What is the purpose of the maintainer workflow in this repository?
 
@@ -129,7 +134,7 @@ When adding content:
 
 ## Where should new prompts be stored?
 
-All workshop build/update prompts should be saved in **`.github/prompts`** using chronological ordering with zero-padded numeric prefixes.
+Workshop prompts belong in **`.github/prompts`**. Preserve the repository's established naming convention: numbered workshop-build prompts remain chronological, while shared command prompts use descriptive names such as `opsx-apply.prompt.md`.
 
 ## What is the OpenSPEC structure in this repo?
 
@@ -146,14 +151,30 @@ In-flight and spec-driven changes are organized under `spec/openspec/`, includin
 Common entry points include:
 
 - creating an issue from the idea capture template
-- starting with a kickoff prompt
-- using `/opsx:propose <slug>` to create the proposal flow
-- using `/opsx:apply <slug>` to move into implementation
-- using `/opsx:verify <slug>` to validate the change
+- starting with the `software-fabric-kickoff` command skill
+- using the `openspec-propose` command skill to create planning artifacts
+- using the `openspec-apply-change` command skill to implement tasks
+- using the `openspec-verify-change` command skill to validate the change
+- using `openspec archive` only after all quality gates pass
 
 ## How is automation triggered?
 
-The repository centers automation around GitHub workflows, the Copilot task template, and labels such as **`copilot-task`** so issues can be routed into implementation-oriented workflows.
+The repository combines OpenSpec CLI workflows with GitHub automation. The Copilot Task template and **`copilot-task`** label route issue-driven work when that workflow is enabled; OpenSpec artifacts remain the source of truth for scope, scenarios, design, and tasks.
+
+Shared agents, skills, prompts, instructions, and selected workflows are synchronized from the registered OpenSpec store `agentic-shared`. The consumer manifest pins `agentic-shared@v1.1.0`; validate it with the canonical store validator before synchronizing.
+
+## How should maintainers update shared agentic assets?
+
+Use the registered OpenSpec store and the canonical synchronization workflow:
+
+```bash
+openspec store list --json
+openspec store doctor agentic-shared
+openspec list --store agentic-shared --json
+python <resolved-store>/.github/scripts/validate_agentic_shared_manifest.py .agentic-shared.yml
+```
+
+Run the synchronization workflow only after the manifest passes validation. It uses three-way conflict detection and must stop rather than overwrite managed files with unresolved local changes.
 
 ## What do the PR stage labels represent?
 
@@ -178,6 +199,8 @@ Current validation themes include:
 - valid `devcontainer.json`
 - `post-create.sh` shell validity expectations
 - ordered prompt naming in `.github/prompts`
+- `.agentic-shared.yml` schema and pinned revision
+- OpenSpec structure and dependency pinning via `bash scripts/validate-openspec-local.sh all`
 
 ## How should maintainers think about environment support?
 
@@ -209,6 +232,7 @@ At minimum, keep these aligned when the workshop evolves:
 - `doc/environments.md`
 - `doc/workshop-roadmap.md`
 - `spec/openspec/changes/README.md`
+- `.agentic-shared.yml` and `.github/workflows/agentic-shared-sync.yml` when shared assets change
 
 ## When should content live in the wiki instead of the repository?
 

@@ -8,7 +8,7 @@ Walk through the complete agentic DevOps lifecycle — from raw idea to deployed
 
 [Agentic DevOps](https://developer.microsoft.com/blog/reimagining-every-phase-of-the-developer-lifecycle) reshapes every phase of software delivery. Rather than autocomplete, agents take on entire classes of tasks with your guidance. The lifecycle looks like this:
 
-```
+```text
 Idea → PRD → Spec-backed Issue → Copilot Coding Agent → PR Review → CI → Deploy → Monitor
 ```
 
@@ -30,10 +30,10 @@ Each hand-off point requires a clear, structured artifact so the next actor (hum
 
 2. Expand it into a **Product Requirements Document (PRD)** using Copilot on GitHub.com or in agent mode:
 
-   ```
+   ```text
    Turn this idea into a short PRD. Include: problem statement, target users,
    key user flows, acceptance criteria, and out-of-scope items.
-   ```
+   ```text
 
 3. Review the PRD. Remove anything vague. Add at least two explicit acceptance criteria.
 
@@ -48,16 +48,17 @@ Convert your PRD into a spec using `spec/spec-template.md`:
 - **Design**: endpoint path, response schema (JSON), HTTP status codes
 - **Tasks**: numbered implementation steps
 
-Save the spec as `spec/changes/health-check/proposal.md` (create the folder).
+Save the proposal under `spec/openspec/changes/health-check/` and use the OpenSpec CLI to create or validate the change structure.
 
 ---
 
 ## Phase 3 — Spec to Issue
 
-1. Create a GitHub issue from the **Copilot Task** issue template.
-2. Paste your spec into the issue body — this becomes the agent's source of truth.
-3. Add the `copilot-task` label.
-4. Confirm the routing workflow fires: check Actions → copilot-task-router run.
+1. Create a GitHub issue from the **Copilot Task** issue template when demonstrating issue routing.
+2. Link the issue to the OpenSpec change and reference its proposal, design, and tasks artifacts.
+3. Add the `copilot-task` label when repository automation is enabled.
+4. Confirm the routing workflow fires: check Actions → `copilot-task-router` run.
+5. For the local CLI-first workflow, inspect the change with `openspec status --change health-check --json` and continue through the repository command skills.
 
 ---
 
@@ -70,7 +71,7 @@ Save the spec as `spec/changes/health-check/proposal.md` (create the folder).
    - Are edge cases (service degraded, missing config) handled?
 3. Leave structured feedback on the PR tied to specific spec scenarios:
 
-   ```
+   ```text
    Scenario "unhealthy service" (spec §3.2) is not covered.
    The endpoint should return HTTP 503 with {"status":"degraded"} when DB is unreachable.
    ```
@@ -82,6 +83,7 @@ Save the spec as `spec/changes/health-check/proposal.md` (create the folder).
 ## Phase 5 — CI Guardrails
 
 Verify CI checks on the pull request:
+
 - All existing tests pass.
 - The new endpoint has tests that map to spec scenarios.
 - No secrets or unsafe patterns in the diff.
@@ -98,7 +100,7 @@ After merging, imagine a monitoring alert fires:
 
 1. Write a new scenario in the spec:
 
-   ```
+   ```text
    Scenario: Health endpoint responds under load
      Given 100 concurrent requests
      When /health is called
@@ -126,5 +128,6 @@ After merging, imagine a monitoring alert fires:
 ## Suggested references
 
 - [Agentic DevOps in action](https://developer.microsoft.com/blog/reimagining-every-phase-of-the-developer-lifecycle) — end-to-end lifecycle walkthrough
-- [OpenSpec OPSX workflow](https://github.com/Fission-AI/OpenSpec/blob/main/docs/opsx.md) — `/opsx:propose` and `/opsx:apply`
+- [OpenSpec CLI](https://github.com/Fission-AI/OpenSpec) — inspect the active root with `openspec context --json` and validate changes with `openspec validate`
+- Repository command skills in `.github/skills/` — use `openspec-propose`, `openspec-apply-change`, and `openspec-verify-change`
 - lab/03-advanced/01-agentic-cicd.md — issue routing and CI automation setup

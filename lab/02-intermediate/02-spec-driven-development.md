@@ -19,7 +19,7 @@ When you delegate work to an AI agent, the output quality is bounded by the clar
 - **How** it will be built (design notes)
 - **What** needs to be done (tasks checklist)
 
-This pattern comes from [OpenSpec](https://github.com/Fission-AI/OpenSpec), a community-driven spec framework. See `spec/spec-template.md` for the blank template and `spec/example-feature-spec.md` for a filled example.
+This pattern comes from [OpenSpec](https://github.com/Fission-AI/OpenSpec), a community-driven spec framework. This repository uses the OpenSpec CLI and stores change artifacts under `spec/openspec/`. See `spec/spec-template.md` for the blank template and `spec/example-feature-spec.md` for a filled example.
 
 ## Exercises
 
@@ -28,11 +28,11 @@ This pattern comes from [OpenSpec](https://github.com/Fission-AI/OpenSpec), a co
 1. Pick a small feature: *"Add a function that validates an email address."*
 2. Ask Copilot directly:
 
-   ```
+  ```text
    Write a function that validates an email address.
    ```
 
-3. Note the result: What edge cases did it handle? Did it add tests? How confident are you in the behavior at the boundaries?
+1. Note the result: What edge cases did it handle? Did it add tests? How confident are you in the behavior at the boundaries?
 
 ---
 
@@ -44,7 +44,7 @@ Use `spec/spec-template.md` as your starting point. Fill in all four sections fo
 
 **Requirements / Scenarios** — write at least 3 scenarios in Given/When/Then format:
 
-```
+```text
 Scenario: Valid email accepted
   Given a string in the format "user@domain.tld"
   When validateEmail is called
@@ -72,9 +72,9 @@ Scenario: Empty string rejected
 1. Attach your spec to Copilot's context (paste or use `@` file reference).
 2. Ask:
 
-   ```
+  ```text
    Implement the tasks in this spec. Follow the scenarios exactly.
-   ```
+  ```text
 
 3. Compare the output with Exercise 1. Did coverage improve? Were the edge cases reflected?
 
@@ -108,5 +108,6 @@ Answer these questions in a short note:
 ## Suggested references
 
 - [OpenSpec concepts](https://github.com/Fission-AI/OpenSpec/blob/main/docs/concepts.md) — fluid, iterative spec philosophy
-- [OpenSpec OPSX workflow](https://github.com/Fission-AI/OpenSpec/blob/main/docs/opsx.md) — `/opsx:propose` quick-start
+- [OpenSpec CLI](https://github.com/Fission-AI/OpenSpec) — use `openspec context --json` and `openspec list --json` to inspect the active workflow
+- Repository command skills in `.github/skills/` — `openspec-propose`, `openspec-apply-change`, and `openspec-verify-change`
 - `spec/spec-template.md` and `spec/example-feature-spec.md` in this repository
