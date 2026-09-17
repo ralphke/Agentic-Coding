@@ -141,6 +141,43 @@ Reusable Software Fabric workflows, templates, prompts, instructions, agents, an
 
 Workshop-specific labs, documentation, and environment setup remain owned locally in this repository.
 
+## Initializing a new repo with OpenSpec and associating it with a shared store
+
+Use the repo-local OpenSpec root for the project you are actively working in. Keep the shared store repo, such as `agentic-shared`, as a separate repository that provides reusable assets and sync patterns rather than as the working repo root itself.
+
+For this environment, the supported command is:
+
+```powershell
+cd "D:\path\to\your\new-repo"
+openspec init .
+openspec context --json
+```
+
+This initializes the repo at the current folder and creates the local OpenSpec configuration under `spec/openspec` (or the configured path for that repo).
+
+The command, `openspec context --json` should return the active repo root and confirm the working directory is recognized as an OpenSpec project.
+
+When you want to use a shared store repo:
+
+1. After you initialized the project repo locally with `openspec init .`.
+2. Keep the shared store as a separate clone or remote repository, such as `agentic-shared`.
+3. Sync or consume the shared assets from the shared repo into the local project repo using the repository's documented workflow or scripts.
+4. Treat the local project repo and the shared store repo as different concerns: the local repo owns the active product work; the shared repo owns reusable patterns and templates.
+
+Example pattern:
+
+```powershell
+# local project repo
+cd "D:\repros\Agentic-Coding"
+openspec init .
+openspec context --json
+
+# shared store repo remains separate
+# git clone https://github.com/ralphke/agentic-shared.git
+```
+
+This avoids mixing the working repo root with the shared asset repository and keeps configuration and local spec state tied to the project being built.openspec vrify
+
 ## Repository layout
 
 - .github/prompts: prompt history recorded in operation order.
