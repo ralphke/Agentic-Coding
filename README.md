@@ -141,6 +141,49 @@ Reusable Software Fabric workflows, templates, prompts, instructions, agents, an
 
 Workshop-specific labs, documentation, and environment setup remain owned locally in this repository.
 
+## How the repos relate to each other
+
+This repository is intentionally split into two concerns:
+
+1. A local project repo: the repo you are actively working in, such as `Agentic-Coding` or your own fork of it.
+2. A shared asset repo: a reusable asset library such as `agentic-shared`.
+
+The local repo owns the project-specific work: workshop content, docs, lab exercises, OpenSpec change proposals, implementations, local specs, and repo-specific automation. The shared repo owns reusable patterns that can be adopted by many projects: generic agents, skills, workflow definitions, prompts, shared instructions, and template conventions.
+
+This distinction is configured in [.agentic-shared.yml](.agentic-shared.yml). That file declares the shared source repository and the local paths that are managed versus protected. In practice:
+
+- `Agentic-Coding` is the working repo for active SDLC work.
+- `agentic-shared` is a reference store for reusable assets.
+- Local files remain under the repository you are developing; shared files are synced or imported rather than treated as the main implementation home.
+- The OpenSpec project root should stay in the local repo, not in the shared repo.
+
+This means your day-to-day work should happen in the project repo. If you want to update a shared workflow or a generic agent definition, do that in the shared repo or through the shared-sync process, then pull the change into the project repo. Do not treat the shared repo as the active project for product or feature work.
+
+### Recommended fork/clone pattern for new users
+
+If you want to start from this repo and create your own project:
+
+```powershell
+# 1) Clone the local project repo you want to build from
+# Example: your own fork of Agentic-Coding
+cd D:\repos
+git clone https://github.com/<your-user>/Agentic-Coding.git
+cd Agentic-Coding
+
+# 2) Keep the shared asset repo separate
+cd ..
+git clone https://github.com/ralphke/agentic-shared.git
+
+# 3) Initialize OpenSpec in the project repo, not in the shared repo
+cd ..\Agentic-Coding
+openspec init .
+openspec context --json
+```
+
+The important rule is: the project repo is the one where you create ideas, proposals, change specs, and implementation tasks through `/opsx:` commands. The shared repo remains the upstream source for reusable, cross-project patterns.
+
+If you want your own custom shared asset library, you can point [.agentic-shared.yml](.agentic-shared.yml) to your fork of `agentic-shared`, but keep the active project repo as the root for OpenSpec work and feature delivery.
+
 ## Initializing a new repo with OpenSpec and associating it with a shared store
 
 Use the repo-local OpenSpec root for the project you are actively working in. Keep the shared store repo, such as `agentic-shared`, as a separate repository that provides reusable assets and sync patterns rather than as the working repo root itself.
