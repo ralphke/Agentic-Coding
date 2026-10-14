@@ -1,0 +1,20 @@
+models:
+  - name: Qwen3-Coder
+    provider: ollama
+    model: qwen3-coder:latest
+    roles:
+      - chat
+      - edit
+      - apply
+
+  - name: Qwen3-Coder
+    provider: ollama
+    model: qwen3-coder:latest
+    roles:
+      - autocomplete
+
+  - name: Phi4-Reasoning
+    provider: ollama
+    model: phi4-reasoning:latest
+    roles:
+      - chat

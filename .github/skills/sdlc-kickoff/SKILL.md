@@ -1,11 +1,8 @@
 ---
-agent: agent
-description: >
-  Full autonomous SDLC kickoff. Takes a raw idea and runs the complete Software
-  Fabric pipeline: propose → design → implement → test → verify → deploy-ready.
-tools: [execute/getTerminalOutput, execute/sendToTerminal, execute/runInTerminal, read, edit/editFiles, search/codebase, 'github/*']
+name: sdlc-kickoff
+description: Full autonomous SDLC kickoff. Takes a raw idea and runs the complete Software Fabric pipeline: propose → design → implement → test → verify → deploy-ready.
+disable-model-invocation: true
 ---
-
 > **Deprecated:** This wrapper is retained for one compatibility release. Use the
 > `software-fabric-kickoff` skill for new workflows; it requires Node.js 26+ and the OpenSpec CLI.
 > Until that release, this prompt continues to run the pipeline below as-is.
