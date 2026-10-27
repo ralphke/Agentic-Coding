@@ -1,20 +1,16 @@
 name: Sync Agentic Shared Assets
 
-# Canonical sync workflow, mirrored from ralphke/agentic-shared.
-# Consumes shared agent/skill/prompt/instruction/workflow definitions by
-# pinned version in .agentic-shared.yml. Always proposes changes as a pull
-# request for repo-owner review; the default branch is never modified
-# directly by this workflow. To pick up upstream changes, run this workflow
-# manually with the desired tagged release (see releases at
-# https://github.com/ralphke/agentic-shared/releases).
+# Copy this workflow into a consumer repository after adding .agentic-shared.yml.
+# Updates are always proposed as a pull request; the default branch is never
+# modified directly by this workflow.
 
 on:
   workflow_dispatch:
     inputs:
       target_version:
-        description: Tagged agentic-shared release to install, for example v1.2.0. Leave blank to install the latest release.
-        required: false
-        default: ''
+        description: Tagged agentic-shared release to install, for example v1.2.1
+        required: true
+        default: 'v1.2.1'
         type: string
 
 permissions:
@@ -32,34 +28,11 @@ jobs:
           path: consumer
           fetch-depth: 1
 
-      - name: Normalize target version
-        id: version
-        env:
-          RAW_VERSION: ${{ inputs.target_version }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          version="${RAW_VERSION}"
-          if [[ -z "${version}" ]]; then
-            # Try GitHub Releases first; fall back to the latest git tag.
-            version="$(gh release list --repo ralphke/agentic-shared --limit 1 --json tagName --jq '.[0].tagName // empty' 2>/dev/null || true)"
-            if [[ -z "${version}" ]]; then
-              version="$(gh api repos/ralphke/agentic-shared/tags --paginate --jq '.[].name' 2>/dev/null | sort -V | tail -n1 || true)"
-            fi
-            if [[ -z "${version}" ]]; then
-              echo "No version specified and no releases or tags found in ralphke/agentic-shared."
-              echo "Please provide a target_version or publish a release/tag in the upstream repository."
-              exit 1
-            fi
-            echo "No version specified; resolved latest: ${version}"
-          fi
-          [[ "${version}" == v* ]] || version="v${version}"
-          echo "target_version=${version}" >> "$GITHUB_OUTPUT"
-
-      - name: Read consumer manifest
+      - name: Read and validate consumer manifest
         id: manifest
         working-directory: consumer
         env:
-          TARGET_VERSION: ${{ steps.version.outputs.target_version }}
+          TARGET_VERSION: ${{ inputs.target_version }}
         run: |
           python -m pip install --disable-pip-version-check --quiet PyYAML
           python - <<'PY'
@@ -86,14 +59,16 @@ jobs:
           ref: ${{ steps.manifest.outputs.old_version }}
           path: shared-old
           fetch-depth: 1
+          token: ${{ secrets.AGENTIC_SHARED_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Checkout target shared release
         uses: actions/checkout@v7
         with:
           repository: ${{ steps.manifest.outputs.repository }}
-          ref: ${{ steps.version.outputs.target_version }}
+          ref: ${{ inputs.target_version }}
           path: shared-new
           fetch-depth: 1
+          token: ${{ secrets.AGENTIC_SHARED_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Validate and synchronize assets
         run: |
@@ -104,7 +79,7 @@ jobs:
             --old-source shared-old \
             --new-source shared-new \
             --destination consumer \
-            --target-version '${{ steps.version.outputs.target_version }}'
+            --target-version '${{ inputs.target_version }}'
 
       - name: Open synchronization pull request
         uses: peter-evans/create-pull-request@v7
@@ -114,16 +89,15 @@ jobs:
           # Set AGENTIC_SHARED_TOKEN (PAT or GitHub App token with contents,
           # pull-requests and workflows write access) so synced workflow files can be pushed.
           token: ${{ secrets.AGENTIC_SHARED_TOKEN || secrets.GITHUB_TOKEN }}
-          branch: chore/agentic-shared-${{ steps.version.outputs.target_version }}
+          branch: chore/agentic-shared-${{ inputs.target_version }}
           delete-branch: true
-          commit-message: "chore: sync agentic-shared ${{ steps.version.outputs.target_version }}"
-          title: "chore: sync agentic-shared ${{ steps.version.outputs.target_version }}"
+          commit-message: "chore: sync agentic-shared ${{ inputs.target_version }}"
+          title: "chore: sync agentic-shared ${{ inputs.target_version }}"
           body: |
-            Updates shared agentic assets to `${{ steps.version.outputs.target_version }}`.
+            Updates shared agentic assets to `${{ inputs.target_version }}`.
 
-            The sync validator ran with three-way conflict detection against
-            [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared).
-            Review the generated diff and run consumer CI before merging.
+            The sync validator ran with three-way conflict detection. Review the
+            generated diff and run consumer CI before merging.
           labels: |
             dependencies
             agentic-shared-sync
