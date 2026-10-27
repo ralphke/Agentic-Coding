@@ -168,11 +168,13 @@ All must pass before a change can be archived:
 
 ### Shared agentic assets (`ralphke/agentic-shared`)
 
-Agents, skills, prompts, instructions, and workflows are owned upstream in [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared) and consumed here by pinned version via [`.agentic-shared.yml`](../.agentic-shared.yml).
+Agents, skills, prompts, instructions, and workflows are owned upstream in [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared) and consumed here by pinned version via [`.agentic-shared.yml`](../.agentic-shared.yml). The manifest's `source.store_id` (`agentic-shared`) identifies the machine-local OpenSpec store; never put its absolute checkout path in the manifest.
 
 - Do **not** hand-edit managed shared files in place (`.github/agents/*.md`, `.github/skills/*.md`, `.github/prompts/*.prompt.md`, `.github/instructions/*.instructions.md`, `.github/workflows/*.yml` that originate upstream) — propose the change in `agentic-shared` instead.
 - Repo-local extensions belong under the reserved `local/` subfolders (e.g. `.github/skills/local/`) or are declared `local` in the manifest's `assets` map.
-- To consume an upstream update, run the `Sync Agentic Shared Assets` workflow (`.github/workflows/agentic-shared-sync.yml`) with the target release tag; it always opens a PR for repo-owner review — it never pushes to `main` directly.
+- For shared-repository OpenSpec work, explicitly pass `--store agentic-shared`; normal project work stays in this repo's OpenSpec root.
+- For local asset sync, validate `.agentic-shared.yml`, then run `.github/scripts/sync_agentic_shared.py --target-version <tag>`. It resolves and verifies the registered store, checks out both tags in temporary directories, and fails closed on sync conflicts.
+- To consume an upstream update through GitHub, dispatch `.github/workflows/agentic-shared-sync.yml` with the target release tag; it uses remote tagged checkouts, opens a PR for repo-owner review, and never pushes to `main` directly.
 
 **OpenSpec CLI install:** `npm install -g @fission-ai/openspec@latest`
 

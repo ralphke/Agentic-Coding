@@ -1,6 +1,6 @@
 source:
   repository: ralphke/agentic-shared
-  local-path: D:\\repos\\agentic-shared
+  store_id: agentic-shared
   version: v1.1.1
 assets:
   agents: managed

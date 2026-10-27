@@ -161,20 +161,21 @@ Common entry points include:
 
 The repository combines OpenSpec CLI workflows with GitHub automation. The Copilot Task template and **`copilot-task`** label route issue-driven work when that workflow is enabled; OpenSpec artifacts remain the source of truth for scope, scenarios, design, and tasks.
 
-Shared agents, skills, prompts, instructions, and selected workflows are synchronized from the registered OpenSpec store `agentic-shared`. The consumer manifest pins `agentic-shared@v1.1.0`; validate it with the canonical store validator before synchronizing.
+Shared agents, skills, prompts, instructions, and selected workflows are synchronized from tagged releases of `ralphke/agentic-shared`. The manifest pins `agentic-shared@v1.1.1` and names the registered OpenSpec store with `source.store_id`; the local store path is resolved by OpenSpec and is not stored in the repository.
 
 ## How should maintainers update shared agentic assets?
 
-Use the registered OpenSpec store and the canonical synchronization workflow:
+Use the OpenSpec store ID for shared-repository operations, and use the local sync script or GitHub workflow to distribute release assets:
 
 ```bash
 openspec store list --json
 openspec store doctor agentic-shared
 openspec list --store agentic-shared --json
 python <resolved-store>/.github/scripts/validate_agentic_shared_manifest.py .agentic-shared.yml
+python .github/scripts/sync_agentic_shared.py --target-version v1.1.1
 ```
 
-Run the synchronization workflow only after the manifest passes validation. It uses three-way conflict detection and must stop rather than overwrite managed files with unresolved local changes.
+The local script resolves `agentic-shared` through `openspec context --json --store agentic-shared`, verifies its Git origin, and uses three-way conflict detection. For a reviewed GitHub update, dispatch `.github/workflows/agentic-shared-sync.yml`; it uses tagged remote checkouts and opens a pull request. Both paths must stop rather than overwrite managed files with unresolved local changes.
 
 ## What do the PR stage labels represent?
 

@@ -137,7 +137,7 @@ The workshop content is curated from:
 
 ## Shared agentic assets
 
-Reusable Software Fabric workflows, templates, prompts, instructions, agents, and skills are now sourced from [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared). Use `.github/workflows/sync-agentic-shared.yml` to pull the canonical shared content into this repository.
+Reusable Software Fabric workflows, templates, prompts, instructions, agents, and skills are maintained in [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared). This repo registers that clone as the OpenSpec store `agentic-shared`; use the store ID for OpenSpec operations against the shared repository. To distribute a tagged release into this consumer, use `.github/workflows/agentic-shared-sync.yml`, which opens a review pull request.
 
 Workshop-specific labs, documentation, and environment setup remain owned locally in this repository.
 
@@ -150,14 +150,34 @@ This repository is intentionally split into two concerns:
 
 The local repo owns the project-specific work: workshop content, docs, lab exercises, OpenSpec change proposals, implementations, local specs, and repo-specific automation. The shared repo owns reusable patterns that can be adopted by many projects: generic agents, skills, workflow definitions, prompts, shared instructions, and template conventions.
 
-This distinction is configured in [.agentic-shared.yml](.agentic-shared.yml). That file declares the shared source repository and the local paths that are managed versus protected. In practice:
+This distinction is configured in [.agentic-shared.yml](.agentic-shared.yml). It declares the upstream repository, registered OpenSpec store ID, pinned release, and asset ownership modes. It deliberately does not store a machine-specific absolute path; OpenSpec resolves the registered ID on each developer's machine. In practice:
 
 - `Agentic-Coding` is the working repo for active SDLC work.
-- `agentic-shared` is a reference store for reusable assets.
+- `agentic-shared` is the registered OpenSpec store for the canonical shared repository and its OpenSpec changes.
 - Local files remain under the repository you are developing; shared files are synced or imported rather than treated as the main implementation home.
-- The OpenSpec project root should stay in the local repo, not in the shared repo.
+- Consumer feature work uses this repo's OpenSpec root by default; explicitly select `--store agentic-shared` only when working on shared specifications or changes.
 
-This means your day-to-day work should happen in the project repo. If you want to update a shared workflow or a generic agent definition, do that in the shared repo or through the shared-sync process, then pull the change into the project repo. Do not treat the shared repo as the active project for product or feature work.
+The OpenSpec store ID and asset synchronization serve different purposes. `openspec ... --store agentic-shared` selects the canonical shared OpenSpec root; the synchronization script consumes tagged repository revisions and reconciles managed files into this consumer. Do not use the shared store for this repo's product or workshop feature work.
+
+### Inspect or update the shared store
+
+The registered store path is machine-local and must be resolved through OpenSpec rather than hard-coded:
+
+```powershell
+openspec store list --json
+openspec store doctor agentic-shared
+openspec context --json --store agentic-shared
+openspec list --json --store agentic-shared
+```
+
+To synchronize a tagged revision locally, run the consumer sync script. It resolves `source.store_id` from the manifest, verifies that the store's Git origin matches `source.repository`, checks out the pinned and target tags in temporary directories, and applies the existing three-way conflict checks:
+
+```powershell
+python .github/scripts/validate_agentic_shared_manifest.py .agentic-shared.yml
+python .github/scripts/sync_agentic_shared.py --target-version v1.1.1
+```
+
+For a reviewed GitHub-hosted update, dispatch `.github/workflows/agentic-shared-sync.yml` with the target release tag. The workflow checks out the same pinned and target tags and opens a pull request; it does not depend on a developer's local store registration.
 
 ### Recommended fork/clone pattern for new users
 
@@ -182,11 +202,11 @@ openspec context --json
 
 The important rule is: the project repo is the one where you create ideas, proposals, change specs, and implementation tasks through `/opsx:` commands. The shared repo remains the upstream source for reusable, cross-project patterns.
 
-If you want your own custom shared asset library, you can point [.agentic-shared.yml](.agentic-shared.yml) to your fork of `agentic-shared`, but keep the active project repo as the root for OpenSpec work and feature delivery.
+If you want your own custom shared asset library, update `source.repository` and register its clone locally with an OpenSpec store ID, then set `source.store_id` accordingly. Keep this project repo as the default OpenSpec root for product work.
 
 ## Initializing a new repo with OpenSpec and associating it with a shared store
 
-Use the repo-local OpenSpec root for the project you are actively working in. Keep the shared store repo, such as `agentic-shared`, as a separate repository that provides reusable assets and sync patterns rather than as the working repo root itself.
+Use the repo-local OpenSpec root for the project you are actively working in. Register the separate shared repository as a store when you need to inspect or maintain its OpenSpec content; the store ID does not change the default project root.
 
 For this environment, the supported command is:
 
@@ -200,26 +220,15 @@ This initializes the repo at the current folder and creates the local OpenSpec c
 
 The command, `openspec context --json` should return the active repo root and confirm the working directory is recognized as an OpenSpec project.
 
-When you want to use a shared store repo:
-
-1. After you initialized the project repo locally with `openspec init .`.
-2. Keep the shared store as a separate clone or remote repository, such as `agentic-shared`.
-3. Sync or consume the shared assets from the shared repo into the local project repo using the repository's documented workflow or scripts.
-4. Treat the local project repo and the shared store repo as different concerns: the local repo owns the active product work; the shared repo owns reusable patterns and templates.
-
-Example pattern:
+To register and select a shared store:
 
 ```powershell
-# local project repo
-cd "D:\repros\Agentic-Coding"
-openspec init .
-openspec context --json
-
-# shared store repo remains separate
-# git clone https://github.com/ralphke/agentic-shared.git
+openspec store register "D:\path\to\agentic-shared" --id agentic-shared --yes
+openspec store list --json
+openspec context --json --store agentic-shared
 ```
 
-This avoids mixing the working repo root with the shared asset repository and keeps configuration and local spec state tied to the project being built.openspec vrify
+Use `openspec context --json` without `--store` to confirm that the consumer project remains the default root. Use `--store agentic-shared` only for shared-repository OpenSpec work.
 
 ## Repository layout
 
