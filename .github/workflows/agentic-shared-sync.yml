@@ -85,6 +85,9 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           path: consumer
+          # GITHUB_TOKEN cannot create or update files under .github/workflows.
+          # Set AGENTIC_SHARED_TOKEN (PAT or GitHub App token with contents,
+          # pull-requests and workflows write access) so synced workflow files can be pushed.
           token: ${{ secrets.AGENTIC_SHARED_TOKEN || secrets.GITHUB_TOKEN }}
           branch: chore/agentic-shared-${{ inputs.target_version }}
           delete-branch: true
