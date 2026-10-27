@@ -22,19 +22,19 @@ The system MUST provide a structured mechanism for submitting new ideas.
 **Accepted input channels:**
 - GitHub Issue using the "💡 Idea Capture" issue template
 - `/opsx:propose <idea-slug>` command in VS Code Copilot chat
-- Direct creation of `spec/openspec/changes/<slug>/proposal.md` from template
+- Direct creation of `openspec/changes/<slug>/proposal.md` from template
 
 #### Scenario: Idea submitted via GitHub Issue
 - GIVEN a user opens a GitHub Issue using the "💡 Idea Capture" template
 - WHEN the issue is submitted with label `idea`
 - THEN the SDLC Orchestrator workflow triggers the Product Owner Agent
-- AND a change folder is created at `spec/openspec/changes/<slug>/`
+	- AND a change folder is created at `openspec/changes/<slug>/`
 - AND the submitter receives a confirmation comment with a link to the change folder
 
 #### Scenario: Idea submitted via chat command
 - GIVEN a user types `/opsx:propose add-csv-export` in VS Code Copilot chat
 - WHEN the Product Owner Agent processes the command
-- THEN `spec/openspec/changes/add-csv-export/proposal.md` is created
+	- THEN `openspec/changes/add-csv-export/proposal.md` is created
 - AND the agent asks clarifying questions if intent is ambiguous
 
 ---
@@ -102,7 +102,7 @@ Change folder names MUST follow the kebab-case slug convention.
 #### Scenario: Valid slug accepted
 - GIVEN a slug `add-csv-export`
 - WHEN the change folder is created
-- THEN the folder `spec/openspec/changes/add-csv-export/` is created successfully
+	- THEN the folder `openspec/changes/add-csv-export/` is created successfully
 
 #### Scenario: Invalid slug rejected
 - GIVEN a slug `Issue #42 fix!`

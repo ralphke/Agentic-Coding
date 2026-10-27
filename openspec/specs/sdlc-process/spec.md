@@ -29,7 +29,7 @@ before any spec, code, or design artifact is created.
 #### Scenario: New feature starts with idea capture
 - GIVEN a product idea or stakeholder request in natural language
 - WHEN the Product Owner Agent processes it via `/opsx:propose <idea-slug>`
-- THEN a `proposal.md` is created in `spec/openspec/changes/<idea-slug>/`
+- THEN a `proposal.md` is created in `openspec/changes/<idea-slug>/`
 - AND all required sections (intent, scope, scenarios, acceptance criteria) are populated
 - AND no code or design work begins until the proposal is accepted
 
@@ -47,7 +47,7 @@ any implementation task is assigned.
 
 #### Scenario: Implementation blocked without spec
 - GIVEN a developer attempts to open a PR referencing a change
-- WHEN the CI orchestrator checks for `spec/openspec/changes/<change>/tasks.md`
+- WHEN the CI orchestrator checks for `openspec/changes/<change>/tasks.md`
 - THEN the PR is blocked if tasks.md is missing or has no checked-off items
 - AND the PR receives a `spec-required` label
 
@@ -114,8 +114,8 @@ merged into the main `specs/` source of truth and the change folder archived.
 - GIVEN all tasks in `tasks.md` are checked off
 - AND all quality gates have passed
 - WHEN `/opsx:archive` is invoked
-- THEN delta specs from `changes/<slug>/specs/` merge into `spec/openspec/specs/`
-- AND the change folder moves to `spec/openspec/changes/archive/`
+- THEN delta specs from `changes/<slug>/specs/` merge into `openspec/specs/`
+- AND the change folder moves to `openspec/changes/archive/`
 - AND the merged spec reflects the ADDED/MODIFIED/REMOVED sections
 
 #### Scenario: Archive blocked by incomplete gates

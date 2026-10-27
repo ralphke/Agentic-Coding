@@ -19,7 +19,7 @@ When you delegate work to an AI agent, the output quality is bounded by the clar
 - **How** it will be built (design notes)
 - **What** needs to be done (tasks checklist)
 
-This pattern comes from [OpenSpec](https://github.com/Fission-AI/OpenSpec), a community-driven spec framework. This repository uses the OpenSpec CLI and stores change artifacts under `spec/openspec/`. See `spec/spec-template.md` for the blank template and `spec/example-feature-spec.md` for a filled example.
+This pattern comes from [OpenSpec](https://github.com/Fission-AI/OpenSpec), a community-driven spec framework. This repository uses the OpenSpec CLI and stores change artifacts under `openspec/`. See `spec/spec-template.md` for the blank template and `spec/example-feature-spec.md` for a filled example.
 
 ## Exercises
 

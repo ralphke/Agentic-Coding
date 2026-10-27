@@ -1,7 +1,7 @@
 source:
   repository: ralphke/agentic-shared
   store_id: agentic-shared
-  version: v1.1.1
+  version: v1.2.0
 assets:
   agents: managed
   skills: extended
@@ -15,6 +15,6 @@ protected_paths:
 - .github/skills/local/**
 - .github/prompts/local/**
 - .github/instructions/local/**
-- spec/openspec/changes/**
+- openspec/changes/**
 - .github/workflows/agentic-shared-sync.yml
 - .github/workflows/sdlc-orchestrator.yml

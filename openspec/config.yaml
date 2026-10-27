@@ -1,32 +1,18 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  This repository is the consumer project and uses this openspec/ directory
+  for its own specifications and changes. Shared Software Fabric assets and
+  shared-repository OpenSpec work belong to the registered agentic-shared
+  store; select it explicitly with --store agentic-shared. The asset sync
+  manifest pins the upstream repository and release independently.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - Keep consumer-project changes under openspec/changes/<slug>/.
+    - Include scope, scenarios, acceptance criteria, and affected domains.
+  tasks:
+    - Create tasks.md before implementation and keep tasks ordered and testable.
+  archive:
+    - Archive completed consumer-project changes under openspec/changes/archive/.
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing

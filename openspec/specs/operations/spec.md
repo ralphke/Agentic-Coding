@@ -100,7 +100,7 @@ Every user-facing service MUST have defined and monitored SLOs.
 | Deployment Success | > 95%           | Per quarter       |
 
 **SLO process:**
-1. Operations Agent defines SLOs in `spec/openspec/specs/operations/slo-register.md`
+1. Operations Agent defines SLOs in `openspec/specs/operations/slo-register.md`
 2. Alerts fire when SLO burn rate exceeds threshold (multi-window alerting)
 3. SLO violations trigger incident response workflow
 

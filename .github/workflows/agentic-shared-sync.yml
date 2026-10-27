@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       target_version:
-        description: Tagged agentic-shared release to install, for example v1.1.1. Leave blank to install the latest release.
+        description: Tagged agentic-shared release to install, for example v1.2.0. Leave blank to install the latest release.
         required: false
         default: ''
         type: string

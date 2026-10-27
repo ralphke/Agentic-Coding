@@ -30,7 +30,7 @@ collect_changed_files() {
 }
 
 has_relevant_changes() {
-  if printf '%s\n' "$CHANGED_FILES" | grep -Eq '^(spec/openspec/|.*requirements[^/]*\.txt$|.*package\.json$|.*\.csproj$|.*packages\.lock\.json$)'; then
+  if printf '%s\n' "$CHANGED_FILES" | grep -Eq '^(openspec/|.*requirements[^/]*\.txt$|.*package\.json$|.*\.csproj$|.*packages\.lock\.json$)'; then
     return 0
   fi
   return 1
@@ -38,7 +38,7 @@ has_relevant_changes() {
 
 validate_openspec_structure() {
   local missing=0
-  for path in spec/openspec/config.yaml spec/openspec/specs spec/openspec/changes spec/openspec/changes/archive; do
+  for path in openspec/config.yaml openspec/specs openspec/changes openspec/changes/archive; do
     if [ ! -e "$path" ]; then
       echo "❌ Missing required OpenSPEC path: $path"
       missing=1
@@ -53,7 +53,7 @@ validate_change_folders() {
 
   while IFS= read -r dir; do
     [ -z "$dir" ] && continue
-    if [ "$dir" = "spec/openspec/changes/archive" ]; then
+    if [[ "$dir" == openspec/changes/archive/* ]]; then
       continue
     fi
     slug="$(basename "$dir")"
@@ -78,7 +78,7 @@ validate_change_folders() {
       echo "❌ Missing design.md in $dir (tasks.md exists)"
       failed=1
     fi
-  done < <(printf '%s\n' "$CHANGED_FILES" | grep -E '^spec/openspec/changes/[^/]+/' | cut -d/ -f1-4 | sort -u)
+  done < <(printf '%s\n' "$CHANGED_FILES" | grep -E '^openspec/changes/[^/]+/' | cut -d/ -f1-4 | sort -u)
 
   [ "$failed" -eq 0 ]
 }

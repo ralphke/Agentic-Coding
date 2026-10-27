@@ -138,13 +138,13 @@ Workshop prompts belong in **`.github/prompts`**. Preserve the repository's esta
 
 ## What is the OpenSPEC structure in this repo?
 
-In-flight and spec-driven changes are organized under `spec/openspec/`, including patterns such as:
+In-flight and spec-driven changes are organized under `openspec/`, including patterns such as:
 
-- `spec/openspec/config.yaml`
-- `spec/openspec/specs/<domain>/spec.md`
-- `spec/openspec/changes/<slug>/proposal.md`
-- `spec/openspec/changes/<slug>/design.md`
-- `spec/openspec/changes/<slug>/tasks.md`
+- `openspec/config.yaml`
+- `openspec/specs/<domain>/spec.md`
+- `openspec/changes/<slug>/proposal.md`
+- `openspec/changes/<slug>/design.md`
+- `openspec/changes/<slug>/tasks.md`
 
 ## How should maintainers start a new change?
 
@@ -161,7 +161,7 @@ Common entry points include:
 
 The repository combines OpenSpec CLI workflows with GitHub automation. The Copilot Task template and **`copilot-task`** label route issue-driven work when that workflow is enabled; OpenSpec artifacts remain the source of truth for scope, scenarios, design, and tasks.
 
-Shared agents, skills, prompts, instructions, and selected workflows are synchronized from tagged releases of `ralphke/agentic-shared`. The manifest pins `agentic-shared@v1.1.1` and names the registered OpenSpec store with `source.store_id`; the local store path is resolved by OpenSpec and is not stored in the repository.
+Shared agents, skills, prompts, instructions, and selected workflows are synchronized from tagged releases of `ralphke/agentic-shared`. The manifest pins `agentic-shared@v1.2.0` and names the registered OpenSpec store with `source.store_id`; the local store path is resolved by OpenSpec and is not stored in the repository. This consumer's OpenSpec commands use `openspec/` by default; pass `--store agentic-shared` only for shared-repository work.
 
 ## How should maintainers update shared agentic assets?
 
@@ -172,7 +172,7 @@ openspec store list --json
 openspec store doctor agentic-shared
 openspec list --store agentic-shared --json
 python <resolved-store>/.github/scripts/validate_agentic_shared_manifest.py .agentic-shared.yml
-python .github/scripts/sync_agentic_shared.py --target-version v1.1.1
+python .github/scripts/sync_agentic_shared.py --target-version v1.2.0
 ```
 
 The local script resolves `agentic-shared` through `openspec context --json --store agentic-shared`, verifies its Git origin, and uses three-way conflict detection. For a reviewed GitHub update, dispatch `.github/workflows/agentic-shared-sync.yml`; it uses tagged remote checkouts and opens a pull request. Both paths must stop rather than overwrite managed files with unresolved local changes.
@@ -232,7 +232,7 @@ At minimum, keep these aligned when the workshop evolves:
 - `doc/setup.md`
 - `doc/environments.md`
 - `doc/workshop-roadmap.md`
-- `spec/openspec/changes/README.md`
+- `openspec/changes/README.md`
 - `.agentic-shared.yml` and `.github/workflows/agentic-shared-sync.yml` when shared assets change
 
 ## When should content live in the wiki instead of the repository?

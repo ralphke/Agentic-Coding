@@ -48,7 +48,7 @@ Convert your PRD into a spec using `spec/spec-template.md`:
 - **Design**: endpoint path, response schema (JSON), HTTP status codes
 - **Tasks**: numbered implementation steps
 
-Save the proposal under `spec/openspec/changes/health-check/` and use the OpenSpec CLI to create or validate the change structure.
+Save the proposal under `openspec/changes/health-check/` and use the OpenSpec CLI to create or validate the change structure.
 
 ---
 

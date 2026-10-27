@@ -52,7 +52,7 @@ git config core.hooksPath .githooks
 
 This enables:
 
-- `.githooks/pre-commit` → validates `spec/openspec/` structure and change folder conventions
+- `.githooks/pre-commit` → validates `openspec/` structure and change folder conventions
 - `.githooks/pre-push` → re-validates OpenSPEC structure and dependency pinning checks
 
 ## Verification checklist

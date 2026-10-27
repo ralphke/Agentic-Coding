@@ -30,7 +30,7 @@ class OpenSpecStoreResolutionTests(unittest.TestCase):
             "source": {
                 "repository": "ralphke/agentic-shared",
                 "store_id": "agentic-shared",
-                "version": "v1.1.1",
+                "version": "v1.2.0",
             },
             "assets": {"skills": "managed"},
         }
@@ -42,7 +42,7 @@ class OpenSpecStoreResolutionTests(unittest.TestCase):
             "source": {
                 "repository": "ralphke/agentic-shared",
                 "store_id": "../other-store",
-                "version": "v1.1.1",
+                "version": "v1.2.0",
             },
             "assets": {"skills": "managed"},
         }

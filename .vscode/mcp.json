@@ -7,9 +7,9 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "${workspaceFolder}/spec/openspec"
+        "${workspaceFolder}/openspec"
       ],
-      "description": "Read/write access to the OpenSPEC spec folder. Used by all Software Fabric agent personas to manage specs, proposals, designs, and tasks."
+      "description": "Read/write access to this consumer project's OpenSpec root. Use --store agentic-shared for shared-repository OpenSpec work."
     },
     "github-mcp": {
       "type": "stdio",
@@ -36,10 +36,10 @@
     "openspec-cli": "The OpenSpec CLI (npm install -g @fission-ai/openspec) provides the /opsx:* commands. It is NOT an MCP server — install it globally and use via VS Code Copilot chat slash commands.",
     "openspec-setup": [
       "Install: npm install -g @fission-ai/openspec@latest",
-      "Then in this repo: openspec init (or point to spec/openspec with --specs-dir)",
+      "Then in this repo: openspec context --json (the project root is openspec/)",
       "Commands: /opsx:propose, /opsx:apply, /opsx:sync, /opsx:archive"
     ],
-    "filesystem-mcp": "The @modelcontextprotocol/server-filesystem MCP server gives AI agents direct read/write access to the spec folder without leaving the chat interface.",
+    "filesystem-mcp": "The @modelcontextprotocol/server-filesystem MCP server gives AI agents direct read/write access to this project's openspec/ root without leaving the chat interface.",
     "github-mcp": "The GitHub MCP server allows AI agents to create issues, add labels, and trigger workflows directly, enabling fully autonomous SDLC handoffs."
   }
 }

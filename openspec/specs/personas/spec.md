@@ -102,7 +102,7 @@ The Developer Agent implements tasks from the approved design.
 - WHEN the Developer Agent implements them
 - THEN exactly the 5 tasks are implemented and checked off
 - AND the PR modifies only files relevant to those tasks
-- AND the PR description includes `Implements: spec/openspec/changes/<slug>/`
+- AND the PR description includes `Implements: openspec/changes/<slug>/`
 
 #### Scenario: Developer responds to review feedback
 - GIVEN a code review with 3 requested changes

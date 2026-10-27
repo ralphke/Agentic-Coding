@@ -29,7 +29,7 @@ Primary workshop artifacts:
 - .github/workflows/
 - .github/instructions/
 - .github/copilot-instructions.md
-- spec/openspec/
+- openspec/
 
 ## Commands
 
@@ -109,7 +109,7 @@ Stages are tracked via PR labels: `stage:proposal` → `stage:design` → `stage
 | Implement a change | `/opsx:apply <slug>` (prompt: `opsx-apply.prompt.md`) |
 | Verify a change | `/opsx:verify <slug>` (prompt: `opsx-verify.prompt.md`) |
 
-### OpenSPEC Structure (`spec/openspec/`)
+### OpenSpec Structure (`openspec/`)
 
 - `config.yaml` — project config, domain ownership, quality gates, persona roster
 - `specs/<domain>/spec.md` — source-of-truth requirement specs (MUST/SHALL + Given/When/Then)
@@ -163,7 +163,7 @@ All must pass before a change can be archived:
 
 | Server | Purpose |
 |--------|---------|
-| `openspec-filesystem` | Read/write `spec/openspec/` folder |
+| `openspec-filesystem` | Read/write `openspec/` folder |
 | `github-mcp` | Create/label issues and PRs |
 
 ### Shared agentic assets (`ralphke/agentic-shared`)
@@ -180,5 +180,5 @@ Agents, skills, prompts, instructions, and workflows are owned upstream in [`ral
 
 ### Instruction Files
 
-- `.github/instructions/openspec-workflow.instructions.md` — applied to `spec/openspec/**`
+- `.github/instructions/openspec-workflow.instructions.md` — applied to `openspec/**`
 - `.github/instructions/sdlc-fabric.instructions.md` — applied globally (`**`)

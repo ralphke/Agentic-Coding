@@ -35,8 +35,8 @@ Using VS Code Copilot:
 
 Or copy the idea template:
 ```
-cp spec/templates/idea-to-spec.md spec/openspec/changes/<slug>/proposal.md
+cp spec/templates/idea-to-spec.md openspec/changes/<slug>/proposal.md
 ```
 
-See `spec/openspec/config.yaml` for project-level settings.
-See `spec/openspec/specs/` for the current source-of-truth specs.
+See `openspec/config.yaml` for project-level settings.
+See `openspec/specs/` for the current source-of-truth specs.

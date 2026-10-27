@@ -12,7 +12,7 @@ for this repository using the OpenSPEC specification framework.
 
 ## What Was Created
 
-### OpenSPEC Structure (`spec/openspec/`)
+### OpenSpec Structure (`openspec/`)
 - `config.yaml` — OpenSpec project configuration with domain ownership and quality gates
 - `specs/sdlc-process/spec.md` — End-to-end SDLC workflow source of truth
 - `specs/personas/spec.md` — All 8 agent persona definitions and collaboration contracts
@@ -37,7 +37,7 @@ Eight specialized AI agent persona definitions:
 - `operations-sre.md` — Deployed app → SLOs + archive
 
 ### Instructions (`.github/instructions/`)
-- `openspec-workflow.instructions.md` — Applied to `spec/openspec/**`
+- `openspec-workflow.instructions.md` — Applied to `openspec/**`
 - `sdlc-fabric.instructions.md` — Applied globally
 
 ### Skills (`.github/skills/`)

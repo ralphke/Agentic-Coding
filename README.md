@@ -174,7 +174,7 @@ To synchronize a tagged revision locally, run the consumer sync script. It resol
 
 ```powershell
 python .github/scripts/validate_agentic_shared_manifest.py .agentic-shared.yml
-python .github/scripts/sync_agentic_shared.py --target-version v1.1.1
+python .github/scripts/sync_agentic_shared.py --target-version v1.2.0
 ```
 
 For a reviewed GitHub-hosted update, dispatch `.github/workflows/agentic-shared-sync.yml` with the target release tag. The workflow checks out the same pinned and target tags and opens a pull request; it does not depend on a developer's local store registration.
@@ -216,7 +216,7 @@ openspec init .
 openspec context --json
 ```
 
-This initializes the repo at the current folder and creates the local OpenSpec configuration under `spec/openspec` (or the configured path for that repo).
+This initializes the repo at the current folder and creates the local OpenSpec configuration under `openspec/` (or the configured path for that repo).
 
 The command, `openspec context --json` should return the active repo root and confirm the working directory is recognized as an OpenSpec project.
 
