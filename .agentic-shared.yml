@@ -1,7 +1,7 @@
 source:
   repository: ralphke/agentic-shared
   store_id: agentic-shared
-  version: v1.2.0
+  version: v1.2.1
 assets:
   agents: managed
   skills: extended
