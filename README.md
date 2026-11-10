@@ -134,6 +134,11 @@ The workshop content is curated from:
 - [GitHub Awesome Copilot](https://github.com/github/awesome-copilot)
 - [VS Code .github build patterns](https://github.com/microsoft/vscode/tree/main/.github)
 - [VS Code Copilot Agents App](https://code.visualstudio.com/docs/copilot/agents-app)
+- [ECC: Everything Claude Code](https://github.com/affaan-m/ECC/tree/main)
+- [Impeccable](https://github.com/pbakaus/impeccable)
+- [OpenCode](https://github.com/anomalyco/opencode)
+- [SuperPowers](https://github.com/obra/superpowers)
+
 
 ## Shared agentic assets
 
