@@ -67,6 +67,20 @@ All three paths use the same `.devcontainer/devcontainer.json` — you get ident
    docker version       # host Docker via socket
    ```
 
+### Troubleshooting container creation on Windows
+
+If Docker reports `accessing specified distro mount service: stat /run/guest-services/distro-services/ubuntu.sock: no such file or directory`, inspect **Dev Containers: Show Container Log** for an automatically added mount from `\\wsl.localhost\Ubuntu\mnt\wslg\runtime-dir\wayland-0`.
+
+This is the optional WSLg/Wayland socket mount, not the repository workspace mount. If you do not need Linux GUI applications, open **Preferences: Open User Settings (JSON)** in the local VS Code Insiders window and add:
+
+```json
+"dev.containers.mountWaylandSocket": false
+```
+
+This is an application-scoped setting: putting it in workspace settings or the container's `customizations.vscode.settings` does not disable the host-side mount. It disables Wayland forwarding for all local devcontainers. Run **Developer: Reload Window**, then **Dev Containers: Reopen in Container** to retry with the cached image. If GUI forwarding is required, repair Docker Desktop's WSL integration for the named distribution instead.
+
+If `[DEP0169]` appears while the host Dev Containers CLI checks features or creates the container, changing the container's Node.js feature will not fix it. A `--trace-deprecation` stack pointing to `getProxyForUrl` in the extension's bundled `devContainersSpecCLI.js` identifies a host-side proxy dependency using `url.parse()`. Update VS Code Insiders and Dev Containers (keeping the intended stable/pre-release channel). If the latest release still warns, report the trace and versions upstream; replacing that dependency's legacy parsing requires an upstream fix. Do not patch bundled extension files or suppress all Node warnings. This warning alone does not indicate a failed mount.
+
 ### Python interpreter note
 
 This workspace uses different Python environments depending on how it starts, but **both use Python 3.14.x** for consistency:
