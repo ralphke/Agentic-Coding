@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Welcome to the Agentic Coding Workshop</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 1.5rem;
+      color: #102a43;
+      background: linear-gradient(135deg, #e6f4ff, #e5faf3);
+      font-family: system-ui, sans-serif;
+      line-height: 1.6;
+    }
+
+    main {
+      width: min(100%, 38rem);
+      padding: clamp(1.5rem, 5vw, 3rem);
+      border: 1px solid #d5e7ee;
+      border-radius: 1.5rem;
+      background: #fff;
+      box-shadow: 0 1rem 3rem rgba(16, 42, 67, 0.1);
+      text-align: center;
+    }
+
+    header img {
+      display: block;
+      width: min(10rem, 100%);
+      height: auto;
+      margin: 0 auto 1rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 5vw, 2.6rem);
+      line-height: 1.15;
+    }
+
+    p {
+      max-width: 32rem;
+      margin: 1.25rem auto 1.75rem;
+      color: #435c70;
+    }
+
+    a {
+      display: inline-block;
+      padding: 0.75rem 1.25rem;
+      border-radius: 0.6rem;
+      background: #0756a6;
+      color: #fff;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    a:hover {
+      background: #063e79;
+    }
+
+    a:focus-visible {
+      outline: 3px solid #008b85;
+      outline-offset: 4px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <img src="../image/Agentic-coding.png" alt="Agentic Coding logo">
+      <h1>Welcome to the Agentic Coding Workshop</h1>
+    </header>
+    <p>Explore how GitHub Copilot can help you turn ideas into working software through hands-on exercises and practical examples.</p>
+    <a href="../doc/workshop-roadmap.md">Explore the workshop roadmap</a>
+  </main>
+</body>
+</html>
