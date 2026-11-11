@@ -1,5 +1,8 @@
 # GitHub Copilot Software Fabric - Autonomous SDLC and Workshops
 
+## Agentic-Coding
+
+![Agentic-Coding](image/Agentic-coding.png)
 This repository hosts a hands-on workshop for beginner, intermediate, and advanced developers to learn how to use GitHub Copilot effectively.
 
 ## Learning goals
@@ -138,7 +141,6 @@ The workshop content is curated from:
 - [Impeccable](https://github.com/pbakaus/impeccable)
 - [OpenCode](https://github.com/anomalyco/opencode)
 - [SuperPowers](https://github.com/obra/superpowers)
-
 
 ## Shared agentic assets
 
