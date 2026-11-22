@@ -21,14 +21,14 @@ Runs 'docker compose up --build' instead of 'docker compose build'.
 Adds '--no-cache' to the compose command.
 
 .EXAMPLE
-pwsh -ExecutionPolicy Bypass -File .devcontainer/build-with-dockerfile.ps1 -Target latest-update
+pwsh -ExecutionPolicy Bypass -File .devcontainer/build-with-dockerfile.ps1 -Target current
 
 .EXAMPLE
 pwsh -ExecutionPolicy Bypass -File .devcontainer/build-with-dockerfile.ps1 -Target custom -CustomDockerfile Dockerfile -Up
 #>
 param(
-    [ValidateSet("latest-update", "custom")]
-    [string]$Target = "latest-update",
+    [ValidateSet("current", "custom")]
+    [string]$Target = "current",
     [string]$CustomDockerfile,
     [switch]$Up,
     [switch]$NoCache
@@ -43,7 +43,7 @@ if (-not (Test-Path -LiteralPath $composePath)) {
 }
 
 switch ($Target) {
-    "latest-update" { $dockerfile = "Dockerfile.latest-update" }
+    "current" { $dockerfile = "Dockerfile" }
     "custom" {
         if ([string]::IsNullOrWhiteSpace($CustomDockerfile)) {
             Write-Error "When Target is 'custom', provide -CustomDockerfile with a Dockerfile name or path."

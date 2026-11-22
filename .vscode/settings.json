@@ -1,8 +1,11 @@
 {
-    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python3",
+    "python.defaultInterpreterPath": "${workspaceFolder}\\.venv",
     "python.analysis.typeCheckingMode": "standard",
     "python.analysis.indexing": false,
     "workbench.editorAssociations": {
         "*.copilotmd": "vscode.markdown.preview.editor"
-    }
+    },
+    "terminal.integrated.tabs.defaultColor": "terminal.ansiWhite",
+    "terminal.integrated.tabs.defaultIcon": "vscode-insiders-outline",
+    "editor.accessibilitySupport": "off"
 }

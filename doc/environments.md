@@ -31,10 +31,10 @@ This document describes the target runtimes, participant device matrix, and how 
 | Device | Path | Docker | Devcontainer support |
 |--------|------|--------|----------------------|
 | macOS (Apple Silicon or Intel) | Local + devcontainer | [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop/) | ✅ via VS Code Insiders |
-| Windows 11 | Local + devcontainer | [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/) (WSL2 backend) | ✅ via VS Code Insiders |
+| Windows 11 | Local + devcontainer | Docker Desktop (WSL2 backend) or WSL containers (`wslc`) | ✅ via VS Code Insiders |
 | GitHub Codespaces | Browser or VS Code | Built-in (no install) | ✅ automatic |
 
-All three paths use the same `.devcontainer/devcontainer.json` — you get identical tool versions regardless of device.
+The Docker and Codespaces paths use `.devcontainer/devcontainer.json`. The optional Windows WSL container template uses the same workshop features without the Docker socket.
 
 ---
 
@@ -43,7 +43,7 @@ All three paths use the same `.devcontainer/devcontainer.json` — you get ident
 ### Prerequisites
 
 - [VS Code Insiders](https://code.visualstudio.com/insiders/) installed
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and **running**
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and **running**, or use the Windows WSL containers alternative below
 - [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) installed in VS Code Insiders
 - This repository cloned locally
 
@@ -66,6 +66,15 @@ All three paths use the same `.devcontainer/devcontainer.json` — you get ident
    openspec --version   # OpenSpec CLI x.x.x
    docker version       # host Docker via socket
    ```
+
+### Windows alternative: WSL containers without Docker Desktop
+
+1. Install or update WSL until `wslc --version` works. Install a recent Dev Containers extension with WSL container support. See [Microsoft's WSL container guidance](https://learn.microsoft.com/windows/wsl/wsl-container).
+2. From Git Bash at the repository root, run `bash .devcontainer/devcontainer-workflow.sh use-wslc`. This backs up the active configuration; move an existing `.devcontainer/devcontainer.json.bak` first.
+3. In Windows VS Code settings, set **Dev Containers: Docker Path** (`dev.containers.dockerPath`) to `wslc`, then run **Dev Containers: Rebuild Container**. Verify it appears in `wslc list`.
+4. To return to Docker, restore `.devcontainer/devcontainer.json.bak` and change the Docker Path setting back to `docker`.
+
+The WSL configuration does not mount a Docker socket. Docker CLI/Scout, Compose, Testcontainers and Aspire workloads that launch container sidecars require a separate Docker-compatible runtime; they are not provided by `wslc` inside the devcontainer. Other workshop features and post-create setup remain available. See [the workflow guide](../.devcontainer/WORKFLOW.md) for building and pushing images with `wslc`.
 
 ### Python interpreter note
 
@@ -130,7 +139,7 @@ Notes:
 
 ### Why docker-outside-of-docker?
 
-.NET Aspire orchestrates service sidecars (database, cache, message broker) as Docker containers. It needs access to the **host** Docker daemon to create and manage those containers. The `docker-outside-of-docker` feature mounts the host Docker socket (`/var/run/docker.sock`) inside the devcontainer — this works on Docker Desktop for Mac, Windows 11 (WSL2 backend), and Codespaces without any extra configuration.
+.NET Aspire orchestrates service sidecars (database, cache, message broker) as Docker containers. It needs access to a compatible **host** Docker daemon to create and manage those containers. The Docker and Codespaces configurations use `docker-outside-of-docker` to mount the host socket; the WSL container configuration omits it.
 
 ---
 

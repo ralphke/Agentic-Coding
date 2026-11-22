@@ -11,26 +11,27 @@ echo "=== Post-create: Agentic Coding Workshop ==="
 
 # PATH additions for user-scoped and workspace tooling.
 export PATH="$PATH:$HOME/.local/bin:$HOME/.dotnet/tools:$HOME/.aspire/bin"
+export DOTNET_ROLL_FORWARD="${DOTNET_ROLL_FORWARD:-Major}"
 
-# Python 3.14 virtual environment (.venv-linux).
+# Python 3.14 virtual environment (.venv).
 echo ""
-echo "Creating .venv-linux with Python 3.14..."
+echo "Creating .venv with Python 3.14..."
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-VENV_DIR="$REPO_ROOT/.venv-linux"
+VENV_DIR="$REPO_ROOT/.venv"
 PYTHON314="$(command -v python3.14 2>/dev/null || true)"
 if [ -z "$PYTHON314" ]; then
   PYTHON314="$(find /usr/local/python -name 'python3.14' -type f 2>/dev/null | head -1 || true)"
 fi
 if [ -n "$PYTHON314" ]; then
   echo "Using Python 3.14 at: $PYTHON314"
-  "$PYTHON314" -m venv "$VENV_DIR" && echo "✓ .venv-linux created at $VENV_DIR" || echo "⚠ venv creation failed"
-  echo "Upgrading pip in .venv-linux..."
+  "$PYTHON314" -m venv "$VENV_DIR" && echo "✓ .venv created at $VENV_DIR" || echo "⚠ venv creation failed"
+  echo "Upgrading pip in .venv..."
   "$VENV_DIR/bin/pip" install --upgrade pip --quiet || echo "⚠ pip upgrade in venv failed"
-  echo "Installing Python requirements into .venv-linux..."
+  echo "Installing Python requirements into .venv..."
   "$VENV_DIR/bin/pip" install -r "$REPO_ROOT/src/requirements-dev.txt" --quiet || echo "⚠ requirements install in venv failed"
-  echo "✓ .venv-linux ready. Activate with: source .venv-linux/bin/activate"
+  echo "✓ .venv ready. Activate with: source .venv/bin/activate"
 else
-  echo "⚠ python3.14 not found — skipping .venv-linux creation"
+  echo "⚠ python3.14 not found — skipping .venv creation"
 fi
 
 # Install Docker Scout CLI
@@ -46,7 +47,7 @@ fi
 echo ""
 echo "=== Environment summary ==="
 echo -n "Python:  "; python3.14 --version 2>/dev/null || python3 --version
-echo -n ".venv-linux: "; [ -f "$VENV_DIR/bin/python3" ] && "$VENV_DIR/bin/python3" --version || echo "(not created)"
+echo -n ".venv: "; [ -f "$VENV_DIR/bin/python3" ] && "$VENV_DIR/bin/python3" --version || echo "(not created)"
 echo -n ".NET:    "; dotnet --version
 echo -n "DAB:     "; dab --version 2>/dev/null || echo "(not found)"
 echo -n "Aspire:  "; aspire --version 2>/dev/null || echo "(not found)"

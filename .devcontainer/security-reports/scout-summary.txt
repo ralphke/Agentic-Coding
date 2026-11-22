@@ -1,0 +1,156 @@
+    ...Storing image for indexing
+    ✓ Image stored for indexing
+    ...Indexing
+    ✓ Indexed 414 packages
+    ✓ Provenance obtained from attestation
+    ✗ Detected 2 vulnerable packages with a total of 15 vulnerabilities
+
+
+## Overview
+
+                   │                Analyzed Image                 
+───────────────────┼───────────────────────────────────────────────
+ Target            │  agentic-coding-image:latest                  
+   digest          │  b44b20c045ca                                 
+   platform        │ linux/amd64                                   
+   vulnerabilities │    2C     9H     5M     0L                    
+   size            │ 416 MB                                        
+   packages        │ 414                                           
+                   │                                               
+ Base image        │  mcr.microsoft.com/devcontainers/base:ubuntu  
+                   │  b377a08d1946                                 
+
+
+## Packages and Vulnerabilities
+
+   2C     9H     4M     0L  stdlib 1.27.1
+pkg:golang/stdlib@1.27.1
+
+    ✗ CRITICAL CVE-2026-56857 — GoLang
+      Advisory: GO-2026-6604
+      https://scout.docker.com/v/CVE-2026-56857?s=golang&n=stdlib&t=golang&vr=%3E%3D1.27.0-0%2C%3C1.27.2
+      Affected range : >=1.27.0-0 
+                     : <1.27.2    
+      Fixed version  : 1.27.2     
+    
+    ✗ CRITICAL CVE-2026-78663 — GoLang
+      Advisory: GO-2026-6612
+      https://scout.docker.com/v/CVE-2026-78663?s=golang&n=stdlib&t=golang&vr=%3E%3D1.27.0-0%2C%3C1.27.2
+      Affected range : >=1.27.0-0 
+                     : <1.27.2    
+      Fixed version  : 1.27.2     
+    
+    ✗ HIGH CVE-2026-97032 — GoLang
+      Advisory: GO-2026-6617
+      https://scout.docker.com/v/CVE-2026-97032?s=golang&n=stdlib&t=golang&vr=%3E%3D1.27.0-0%2C%3C1.27.2
+      Affected range : >=1.27.0-0 
+                     : <1.27.2    
+      Fixed version  : 1.27.2     
+    
+    ✗ HIGH CVE-2026-97031 — GoLang
+      Advisory: GO-2026-6607
+      https://scout.docker.com/v/CVE-2026-97031?s=golang&n=stdlib&t=golang&vr=%3E%3D1.27.0-0%2C%3C1.27.2
+      Affected range : >=1.27.0-0 
+                     : <1.27.2    
+      Fixed version  : 1.27.2     
+    
+    ✗ HIGH CVE-2026-94440 — GoLang
+      Advisory: GO-2026-6608
+      https://scout.docker.com/v/CVE-2026-94440?s=golang&n=stdlib&t=golang&vr=%3E%3D1.27.0-0%2C%3C1.27.2
+      Affected range : >=1.27.0-0 
+                     : <1.27.2    
+      Fixed version  : 1.27.2     
+    
+    ✗ HIGH CVE-2026-94439 — GoLang
+      Advisory: GO-2026-6613
+      https://scout.docker.com/v/CVE-2026-94439?s=golang&n=stdlib&t=golang&vr=%3E%3D1.27.0-0%2C%3C1.27.2
+      Affected range : >=1.27.0-0 
+                     : <1.27.2    
+      Fixed version  : 1.27.2     
+    
+    ✗ HIGH CVE-2026-78669 — GoLang
+      Advisory: GO-2026-6611
+      https://scout.docker.com/v/CVE-2026-78669?s=golang&n=stdlib&t=golang&vr=%3E%3D1.27.0-0%2C%3C1.27.2
+      Affected range : >=1.27.0-0 
+                     : <1.27.2    
+      Fixed version  : 1.27.2     
+    
+    ✗ HIGH CVE-2026-78667 — GoLang
+      Advisory: GO-2026-6609
+      https://scout.docker.com/v/CVE-2026-78667?s=golang&n=stdlib&t=golang&vr=%3E%3D1.27.0-0%2C%3C1.27.2
+      Affected range : >=1.27.0-0 
+                     : <1.27.2    
+      Fixed version  : 1.27.2     
+    
+    ✗ HIGH CVE-2026-78660 — GoLang
+      Advisory: GO-2026-6610
+      https://scout.docker.com/v/CVE-2026-78660?s=golang&n=stdlib&t=golang&vr=%3E%3D1.27.0-0%2C%3C1.27.2
+      Affected range : >=1.27.0-0 
+                     : <1.27.2    
+      Fixed version  : 1.27.2     
+    
+    ✗ HIGH CVE-2026-78659 — GoLang
+      Advisory: GO-2026-6603
+      https://scout.docker.com/v/CVE-2026-78659?s=golang&n=stdlib&t=golang&vr=%3E%3D1.27.0-0%2C%3C1.27.2
+      Affected range : >=1.27.0-0 
+                     : <1.27.2    
+      Fixed version  : 1.27.2     
+    
+    ✗ HIGH CVE-2026-56866 — GoLang
+      Advisory: GO-2026-6605
+      https://scout.docker.com/v/CVE-2026-56866?s=golang&n=stdlib&t=golang&vr=%3E%3D1.27.0-0%2C%3C1.27.2
+      Affected range : >=1.27.0-0 
+                     : <1.27.2    
+      Fixed version  : 1.27.2     
+    
+    ✗ MEDIUM CVE-2026-111943 — GoLang
+      Advisory: GO-2026-6809
+      https://scout.docker.com/v/CVE-2026-111943?s=golang&n=stdlib&t=golang&vr=%3E%3D1.27.0-0%2C%3C1.27.3
+      Affected range : >=1.27.0-0 
+                     : <1.27.3    
+      Fixed version  : 1.27.3     
+    
+    ✗ MEDIUM CVE-2026-97030 — GoLang
+      Advisory: GO-2026-6600
+      https://scout.docker.com/v/CVE-2026-97030?s=golang&n=stdlib&t=golang&vr=%3E%3D1.27.0-0%2C%3C1.27.2
+      Affected range : >=1.27.0-0 
+                     : <1.27.2    
+      Fixed version  : 1.27.2     
+    
+    ✗ MEDIUM CVE-2026-94448 — GoLang
+      Advisory: GO-2026-6599
+      https://scout.docker.com/v/CVE-2026-94448?s=golang&n=stdlib&t=golang&vr=%3E%3D1.27.0-0%2C%3C1.27.2
+      Affected range : >=1.27.0-0 
+                     : <1.27.2    
+      Fixed version  : 1.27.2     
+    
+    ✗ MEDIUM CVE-2026-97054 — GoLang
+      Advisory: GO-2026-6859
+      https://scout.docker.com/v/CVE-2026-97054?s=golang&n=stdlib&t=golang&vr=%3E%3D1.27.0-0%2C%3C1.27.4
+      Affected range : >=1.27.0-0 
+                     : <1.27.4    
+      Fixed version  : 1.27.4     
+    
+
+   0C     0H     1M     0L  stdlib 1.27.3
+pkg:golang/stdlib@1.27.3
+
+    ✗ MEDIUM CVE-2026-97054 — GoLang
+      Advisory: GO-2026-6859
+      https://scout.docker.com/v/CVE-2026-97054?s=golang&n=stdlib&t=golang&vr=%3E%3D1.27.0-0%2C%3C1.27.4
+      Affected range : >=1.27.0-0 
+                     : <1.27.4    
+      Fixed version  : 1.27.4     
+    
+
+
+16 vulnerabilities found in 2 packages
+  CRITICAL  2 
+  HIGH      9 
+  MEDIUM    5 
+  LOW       0 
+
+
+What's next:
+    View base image update recommendations → docker scout recommendations agentic-coding-image:latest
+

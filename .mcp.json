@@ -1,0 +1,16 @@
+{
+	"mcpServers": {
+		"openspec-filesystem": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-filesystem",
+				"C:\\DevDrive\\repos\\Agentic-Coding/openspec"
+			],
+			"tools": [
+				"*"
+			]
+		}
+	}
+}

@@ -4,10 +4,9 @@
 # If devcontainer.json changes its base image, keep Dockerfile.security-fix aligned.
 # invoked by: docker compose -f docker-compose.yml build 2>&1 | tail -50
 services:
-  agentic-coding:
-    container_name: Agentic-Coding-latest
-    #    image: ghcr.io/ralphke/agentic-coding-image@sha256:25a699a1f866a77aa00e5a16f0bb098ecd4425dabe6be21881a9ca8de788d73d
-    image: ghcr.io/ralphke/agentic-coding-image:latest
+  devcontainers-base:
+    container_name: devcontainers-base
+    image: mcr.microsoft.com/devcontainers/base:ubuntu
     build:
       context: .
       dockerfile: ${DOCKERFILE_TARGET:-Dockerfile}

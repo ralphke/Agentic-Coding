@@ -65,7 +65,11 @@ check_tool npx "npx" npx --version
 check_tool openspec "OpenSpec CLI" openspec --version
 check_tool python3.14 "Python 3.14" python3.14 --version
 check_tool dotnet ".NET SDK" dotnet --version
-check_tool docker "Docker" docker --version
+if [[ "${DEVCONTAINER_RUNTIME:-}" == "wslc" ]]; then
+  warn "Docker daemon and Docker Scout are not provided by the WSL container runtime"
+else
+  check_tool docker "Docker" docker --version
+fi
 
 if [[ -x .venv-linux/bin/python3 ]]; then
   pass ".venv-linux exists"
@@ -82,7 +86,7 @@ if [[ -f src/requirements-dev.txt ]] && [[ -x .venv-linux/bin/python3 ]]; then
   fi
 fi
 
-if command -v docker >/dev/null 2>&1; then
+if [[ "${DEVCONTAINER_RUNTIME:-}" != "wslc" ]] && command -v docker >/dev/null 2>&1; then
   if output=$(docker scout version 2>&1 | tail -n 1) && [[ -n "$output" ]]; then
     pass "Docker Scout version: $output"
   else

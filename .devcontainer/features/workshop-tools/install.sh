@@ -43,6 +43,12 @@ else
   else
     echo "[workshop-tools] WARNING: Failed to install or update dab"
   fi
+
+  # dotnet tool shims and the native apphost package must be executable for
+  # the vscode user, not only for the root build process.
+  chmod a+rx /usr/local/bin/dab 2>/dev/null || true
+  find /usr/local/bin/.store/microsoft.dataapibuilder -type f -name 'Microsoft.DataApiBuilder' \
+    -exec chmod a+x {} + 2>/dev/null || true
 fi
 
 if [ "$INSTALL_ASPIRE" = "false" ] || [ "$INSTALL_ASPIRE" = "0" ]; then

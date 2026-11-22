@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"workbench.editorAssociations": {
+			"*.copilotmd": "vscode.markdown.preview.editor"
+		},
+		"python.defaultInterpreterPath": ".venv/Scripts/python3",
+		"editor.accessibilitySupport": "off",
+		"terminal.integrated.enableImages": true
+	}
+}

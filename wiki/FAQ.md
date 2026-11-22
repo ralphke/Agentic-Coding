@@ -22,7 +22,7 @@ At minimum, install and prepare:
 
 For local container-based work on macOS or Windows 11, also install:
 
-- **Docker Desktop**
+- **Docker Desktop**, or on Windows [WSL containers](../doc/environments.md#windows-alternative-wsl-containers-without-docker-desktop) for workflows that do not need a Docker socket.
 
 See `doc/setup.md` and `doc/environments.md` for detailed setup steps.
 

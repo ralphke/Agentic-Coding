@@ -5,7 +5,8 @@
     "description": "Installs workshop CLIs and OS packages at build time for faster container startup.",
     "documentationURL": "https://github.com/ralphke/Agentic-Coding",
     "installsAfter": [
-        "ghcr.io/devcontainers/features/dotnet"
+        "ghcr.io/devcontainers/features/dotnet",
+        "ghcr.io/devcontainers/features/node"
     ],
     "options": {
         "installDab": {

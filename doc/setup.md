@@ -80,7 +80,7 @@ See **[doc/environments.md](environments.md)** for the full device matrix, quick
 
 ### Extra prerequisite for Mac and Windows 11
 
-Install and start **[Docker Desktop](https://www.docker.com/products/docker-desktop/)** before opening the repository in VS Code. Codespaces users do not need Docker Desktop.
+Install and start **[Docker Desktop](https://www.docker.com/products/docker-desktop/)** before opening the repository in VS Code, or on Windows use [WSL containers](environments.md#windows-alternative-wsl-containers-without-docker-desktop). Codespaces users do not need Docker Desktop.
 
 ### One-click start
 
@@ -98,10 +98,10 @@ Install and start **[Docker Desktop](https://www.docker.com/products/docker-desk
 
 ### Verification checklist (devcontainer)
 
-- [ ] Docker Desktop is installed and running (Mac / Windows 11)
+- [ ] Docker Desktop is running, or Windows WSL containers are configured
 - [ ] Devcontainer builds without errors
 - [ ] `python3 --version` shows 3.14.x
 - [ ] `dotnet --version` shows 10.0.x
 - [ ] `dab --version` shows a version number
 - [ ] `openspec --version` shows a version number
-- [ ] `docker version` shows the host Docker version
+- [ ] `docker version` shows the host Docker version (Docker workflow only)

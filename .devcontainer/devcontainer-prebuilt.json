@@ -1,5 +1,5 @@
 {
-  "name": "Agentic Coding Workshop (Pre-built)",
+  "name": "Agentic Coding Workshop",
   "image": "ghcr.io/ralphke/agentic-coding-image:latest",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "features": {
@@ -14,7 +14,7 @@
     "ghcr.io/devcontainers/features/dotnet:2": {
       "tabCompletions": true,
       "version": "latest",
-      "additionalVersions": "8.0"
+      "additionalVersions": "8.0,10.0"
     },
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
       "installDockerBuildx": true,
@@ -40,7 +40,8 @@
   },
   "postCreateCommand": "cd ${containerWorkspaceFolder} && ([ -x /bin/bash ] && /bin/bash .devcontainer/post-create.sh || /bin/sh .devcontainer/post-create.sh)",
   "remoteEnv": {
-    "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin:/home/vscode/.dotnet/tools:/home/vscode/.aspire/bin"
+    "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin:/home/vscode/.dotnet/tools:/home/vscode/.aspire/bin",
+    "DOTNET_ROLL_FORWARD": "Major"
   },
   "forwardPorts": [
     18888,
