@@ -6,7 +6,7 @@ Improve this repo with the new resources shared in the README.md to educate the 
 
 ## Source materials incorporated
 
-- [OpenSpec](https://github.com/Fission-AI/OpenSpec) — spec-first framework; `/opsx:propose → apply → archive` workflow; proposal/scenarios/design/tasks artifact structure
+- [OpenSpec](https://github.com/Fission-AI/OpenSpec) — spec-first framework; `/openspec-propose → apply → archive` workflow; proposal/scenarios/design/tasks artifact structure
 - [Agentic DevOps in action](https://developer.microsoft.com/blog/reimagining-every-phase-of-the-developer-lifecycle) — full agentic developer lifecycle: idea → PRD → spec → coding agent → review → deploy → monitor
 
 ## Actions performed

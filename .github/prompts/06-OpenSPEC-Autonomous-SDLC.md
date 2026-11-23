@@ -13,6 +13,7 @@ for this repository using the OpenSPEC specification framework.
 ## What Was Created
 
 ### OpenSpec Structure (`openspec/`)
+
 - `config.yaml` — OpenSpec project configuration with domain ownership and quality gates
 - `specs/sdlc-process/spec.md` — End-to-end SDLC workflow source of truth
 - `specs/personas/spec.md` — All 8 agent persona definitions and collaboration contracts
@@ -23,10 +24,13 @@ for this repository using the OpenSPEC specification framework.
 - `changes/README.md` — Changes directory documentation
 
 ### Templates (`spec/templates/`)
+
 - `idea-to-spec.md` — Complete idea-to-OpenSPEC-proposal template
 
 ### Agent Personas (`.github/agents/`)
+
 Eight specialized AI agent persona definitions:
+
 - `product-owner.md` — Idea intake → proposal
 - `architect.md` — Proposal → design + tasks
 - `developer.md` — Tasks → implementation
@@ -37,28 +41,33 @@ Eight specialized AI agent persona definitions:
 - `operations-sre.md` — Deployed app → SLOs + archive
 
 ### Instructions (`.github/instructions/`)
+
 - `openspec-workflow.instructions.md` — Applied to `openspec/**`
 - `sdlc-fabric.instructions.md` — Applied globally
 
 ### Skills (`.github/skills/`)
-- `idea-to-spec/skill.md` — Product Owner skill
-- `spec-to-design/skill.md` — Architect skill
-- `test-generation/skill.md` — QA Engineer skill
-- `security-review/skill.md` — Security Engineer skill
-- `pr-review/skill.md` — Code Reviewer skill
-- `deploy-pipeline/skill.md` — DevOps/SRE skill
+
+- `idea-to-spec/SKILL.md` — Product Owner skill
+- `spec-to-design/SKILL.md` — Architect skill
+- `test-generation/SKILL.md` — QA Engineer skill
+- `security-review/SKILL.md` — Security Engineer skill
+- `pr-review/SKILL.md` — Code Reviewer skill
+- `deploy-pipeline/SKILL.md` — DevOps/SRE skill
 
 ### Prompts (`.github/prompts/`)
-- `opsx-propose.prompt.md` — Start a new change
-- `opsx-apply.prompt.md` — Implement a change
-- `opsx-verify.prompt.md` — Verify implementation against spec
+
+- `openspec-propose.prompt.md` — Start a new change
+- `openspec-apply-change.prompt.md` — Implement a change
+- `openspec-verify-change.prompt.md` — Verify implementation against spec
 - `sdlc-kickoff.prompt.md` — Full autonomous SDLC kickoff
 
-### VS Code MCP (`.vscode/mcp.json`)
+### VS Code MCP (`.mcp.json`)
+
 - `openspec-filesystem` — Spec folder filesystem access
 - `github-mcp` — GitHub API integration
 
 ### GitHub Automation
+
 - `.github/workflows/sdlc-orchestrator.yml` — Stage-gate orchestration workflow
 - `.github/ISSUE_TEMPLATE/idea-capture.yml` — Structured idea submission
 

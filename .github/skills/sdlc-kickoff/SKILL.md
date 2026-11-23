@@ -1,6 +1,6 @@
 ---
 name: sdlc-kickoff
-description: Full autonomous SDLC kickoff. Takes a raw idea and runs the complete Software Fabric pipeline: propose → design → implement → test → verify → deploy-ready.
+description: "Full autonomous SDLC kickoff. Takes a raw idea and runs the complete Software Fabric pipeline: propose → design → implement → test → verify → deploy-ready."
 disable-model-invocation: true
 ---
 > **Deprecated:** This wrapper is retained for one compatibility release. Use the
@@ -103,8 +103,8 @@ Code Review:   ✅ APPROVED
 
 Ready for:
   → Open PR for human review
-  → Deploy: /opsx:verify + merge → automated pipeline
-  → Archive: /opsx:archive <slug> (after production deployment)
+  → Deploy: /openspec-verify-change + merge → automated pipeline
+  → Archive: /openspec-archive-change <slug> (after production deployment)
 ```
 
 ## Usage

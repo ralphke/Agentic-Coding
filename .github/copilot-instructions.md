@@ -105,9 +105,9 @@ Stages are tracked via PR labels: `stage:proposal` → `stage:design` → `stage
 |--------|-------------|
 | Submit an idea | Open an issue using `.github/ISSUE_TEMPLATE/idea-capture.yml` |
 | Start pipeline in chat | Use `.github/prompts/sdlc-kickoff.prompt.md` |
-| Propose a change | `/opsx:propose <slug>` (prompt: `opsx-propose.prompt.md`) |
-| Implement a change | `/opsx:apply <slug>` (prompt: `opsx-apply.prompt.md`) |
-| Verify a change | `/opsx:verify <slug>` (prompt: `opsx-verify.prompt.md`) |
+| Propose a change | `/openspec-propose <slug>` (prompt: `openspec-propose.prompt.md`) |
+| Implement a change | `/openspec-apply-change <slug>` (prompt: `openspec-apply-change.prompt.md`) |
+| Verify a change | `/openspec-verify-change <slug>` (prompt: `openspec-verify-change.prompt.md`) |
 
 ### OpenSpec Structure (`openspec/`)
 
@@ -159,7 +159,7 @@ All must pass before a change can be archived:
 - ✅ All `tasks.md` items checked
 - ✅ All `proposal.md` acceptance criteria checked
 
-### MCP Servers (`.vscode/mcp.json`)
+### MCP Servers (`.mcp.json`)
 
 | Server | Purpose |
 |--------|---------|

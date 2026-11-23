@@ -2,7 +2,7 @@
 
 Use this template to capture a new idea and convert it into a Software Fabric
 OpenSPEC change. Copy to `openspec/changes/<your-slug>/proposal.md` and fill
-in all sections — or run `/opsx:propose <slug>` in VS Code Copilot and the
+in all sections — or run `/openspec-propose <slug>` in VS Code Copilot and the
 Product Owner Agent will guide you through each section.
 
 ---

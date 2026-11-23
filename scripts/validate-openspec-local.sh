@@ -78,7 +78,7 @@ validate_change_folders() {
       echo "❌ Missing design.md in $dir (tasks.md exists)"
       failed=1
     fi
-  done < <(printf '%s\n' "$CHANGED_FILES" | grep -E '^openspec/changes/[^/]+/' | cut -d/ -f1-4 | sort -u)
+  done < <(printf '%s\n' "$CHANGED_FILES" | grep -E '^openspec/changes/[^/]+/' | cut -d/ -f1-3 | sort -u)
 
   [ "$failed" -eq 0 ]
 }

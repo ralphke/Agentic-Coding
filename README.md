@@ -144,7 +144,9 @@ The workshop content is curated from:
 
 ## Shared agentic assets
 
-Reusable Software Fabric workflows, templates, prompts, instructions, agents, and skills are maintained in [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared). This repo registers that clone as the OpenSpec store `agentic-shared`; use the store ID for OpenSpec operations against the shared repository. To distribute a tagged release into this consumer, use `.github/workflows/agentic-shared-sync.yml`, which opens a review pull request.
+Reusable Software Fabric workflows, templates, prompts, instructions, agents, and skills are maintained in [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared). This repo registers that clone as the OpenSpec store `agentic-shared`; use the store ID for OpenSpec operations against the shared repository. This consumer currently pins `v1.3.0`. To distribute a tagged release into this consumer, use `.github/workflows/agentic-shared-sync.yml`, which opens a review pull request.
+
+Copilot discovers operational customizations from native repository locations: agents under `.github/agents`, instructions under `.github/instructions`, canonical skills under `.github/skills/<name>/SKILL.md`, and MCP integrations from `.mcp.json`. The numbered files matching `.github/prompts/0*-*.md` are chronological workshop history, not active prompt entry points; operational workflows are exposed as skills.
 
 Workshop-specific labs, documentation, and environment setup remain owned locally in this repository.
 
@@ -181,7 +183,7 @@ To synchronize a tagged revision locally, run the consumer sync script. It resol
 
 ```powershell
 python .github/scripts/validate_agentic_shared_manifest.py .agentic-shared.yml
-python .github/scripts/sync_agentic_shared.py --target-version v1.2.0
+python .github/scripts/sync_agentic_shared.py --target-version v1.3.0
 ```
 
 For a reviewed GitHub-hosted update, dispatch `.github/workflows/agentic-shared-sync.yml` with the target release tag. The workflow checks out the same pinned and target tags and opens a pull request; it does not depend on a developer's local store registration.
@@ -207,7 +209,7 @@ openspec init .
 openspec context --json
 ```
 
-The important rule is: the project repo is the one where you create ideas, proposals, change specs, and implementation tasks through `/opsx:` commands. The shared repo remains the upstream source for reusable, cross-project patterns.
+The important rule is: the project repo is the one where you create ideas, proposals, change specs, and implementation tasks through `/openspec:` commands. The shared repo remains the upstream source for reusable, cross-project patterns.
 
 If you want your own custom shared asset library, update `source.repository` and register its clone locally with an OpenSpec store ID, then set `source.store_id` accordingly. Keep this project repo as the default OpenSpec root for product work.
 

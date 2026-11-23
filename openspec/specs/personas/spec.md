@@ -21,7 +21,7 @@ Personas are defined in `.github/agents/` and referenced by Copilot instructions
 The Product Owner (PO) Agent is the entry point for all new work.
 
 **Responsibilities:**
-- Accept raw ideas via GitHub issues (label: `idea`) or `/opsx:propose`
+- Accept raw ideas via GitHub issues (label: `idea`) or `/openspec-propose`
 - Produce a complete OpenSPEC `proposal.md` covering intent, scope, user value
 - Define ≥ 3 Given/When/Then scenarios per feature, including unhappy paths
 - Identify explicitly out-of-scope items to prevent scope creep
@@ -29,7 +29,7 @@ The Product Owner (PO) Agent is the entry point for all new work.
 
 **Input:** Raw idea text, user story, business requirement, customer feedback  
 **Output:** `proposal.md`, initial delta `specs/<domain>/spec.md`  
-**Triggers:** GitHub issue with label `idea`, `/opsx:propose <slug>` command  
+**Triggers:** GitHub issue with label `idea`, `/openspec-propose <slug>` command
 **Handoff:** Labels PR/issue `stage:design` when proposal is accepted  
 **Agent file:** `.github/agents/product-owner.md`
 
@@ -252,7 +252,7 @@ The Operations SRE Agent ensures the deployed application is observable and resi
 **Input:** Deployed application, SLO targets, existing dashboards  
 **Output:** Monitoring dashboards, alert policies, runbooks, post-mortem reports  
 **Triggers:** Successful production deployment (label: `stage:operate`)  
-**Handoff:** Invokes `/opsx:archive` when SLOs are configured and stable  
+**Handoff:** Invokes `/openspec-archive-change` when SLOs are configured and stable
 **Agent file:** `.github/agents/operations-sre.md`
 
 #### Scenario: New endpoint gets SLO and alerting

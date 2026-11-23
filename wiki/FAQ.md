@@ -134,7 +134,7 @@ When adding content:
 
 ## Where should new prompts be stored?
 
-Workshop prompts belong in **`.github/prompts`**. Preserve the repository's established naming convention: numbered workshop-build prompts remain chronological, while shared command prompts use descriptive names such as `opsx-apply.prompt.md`.
+Workshop prompts belong in **`.github/prompts`**. Preserve the repository's established naming convention: numbered workshop-build prompts remain chronological, while shared command prompts use descriptive names such as `openspec-apply-change.prompt.md`.
 
 ## What is the OpenSPEC structure in this repo?
 

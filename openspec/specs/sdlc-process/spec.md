@@ -2,7 +2,7 @@
 
 > **Domain:** `sdlc-process` | **Owner:** architect  
 > This spec describes the end-to-end autonomous SDLC workflow.  
-> Update via `/opsx:propose` — do not edit directly.
+> Update via `/openspec-propose` — do not edit directly.
 
 ---
 
@@ -28,7 +28,7 @@ before any spec, code, or design artifact is created.
 
 #### Scenario: New feature starts with idea capture
 - GIVEN a product idea or stakeholder request in natural language
-- WHEN the Product Owner Agent processes it via `/opsx:propose <idea-slug>`
+- WHEN the Product Owner Agent processes it via `/openspec-propose <idea-slug>`
 - THEN a `proposal.md` is created in `openspec/changes/<idea-slug>/`
 - AND all required sections (intent, scope, scenarios, acceptance criteria) are populated
 - AND no code or design work begins until the proposal is accepted
@@ -82,7 +82,7 @@ Each agent stage MUST complete before the next begins, signalled by PR labels.
 ---
 
 ### Requirement: Automated Quality Gates
-Every change MUST pass all quality gates before `/opsx:archive` is invoked.
+Every change MUST pass all quality gates before `/openspec-archive-change` is invoked.
 
 **Gate checklist:**
 - [ ] All CI checks green (build, lint, unit tests)
@@ -113,14 +113,14 @@ merged into the main `specs/` source of truth and the change folder archived.
 #### Scenario: Successful archive
 - GIVEN all tasks in `tasks.md` are checked off
 - AND all quality gates have passed
-- WHEN `/opsx:archive` is invoked
+- WHEN `/openspec-archive-change` is invoked
 - THEN delta specs from `changes/<slug>/specs/` merge into `openspec/specs/`
 - AND the change folder moves to `openspec/changes/archive/`
 - AND the merged spec reflects the ADDED/MODIFIED/REMOVED sections
 
 #### Scenario: Archive blocked by incomplete gates
 - GIVEN a change where CI is still failing
-- WHEN `/opsx:archive` is invoked
+- WHEN `/openspec-archive-change` is invoked
 - THEN the archive is rejected with a list of failing gates
 - AND no files are moved or modified
 
@@ -167,6 +167,6 @@ flowchart TD
     P --> E
     O -- Pass --> Q[Deploy to Production]
     Q --> R[Operations SRE\nMonitor & SLOs]
-    R --> S[/opsx:archive]
+    R --> S[/openspec-archive-change]
     S --> T([✅ Production Feature])
 ```

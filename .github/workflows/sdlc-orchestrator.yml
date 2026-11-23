@@ -3,7 +3,7 @@ on:
   issues:
     types: [labeled]
   pull_request:
-    types: [labeled, unlabeled, ready_for_review]
+    types: [opened, reopened, synchronize, labeled, unlabeled, ready_for_review]
 
 permissions:
   issues: write
@@ -32,29 +32,34 @@ jobs:
               body: [
                 '## 🏭 Software Fabric — Idea Received',
                 '',
-                'Your idea has been queued for the autonomous SDLC pipeline.',
+                'Your idea has been received for assessment, not repository capture.',
                 '',
-                '**Next step:** The Product Owner Agent will transform this into an OpenSPEC proposal.',
+                '**Next step:** The Product Owner Agent will assess it and offer Proceed, Defer, or Do not pursue before any repository writes.',
+                'A raw idea, label, priority, or kickoff alone does not authorize capture. Missing input pauses capture.',
+                'Defer or rejection writes no repository files, never deletes existing work, and is not successful archive.',
+                'An explicit request to create named repository artifacts counts as Proceed; do not repeat that decision at handoff.',
                 '',
                 '**To start the pipeline now**, run in VS Code Copilot chat:',
                 '```',
-                `/opsx:propose  ← then reference issue #${context.issue.number}`,
+                `/openspec-propose  ← include issue #${context.issue.number} as the Product Owner input`,
                 '```',
                 '',
-                '**Or use the full kickoff prompt:**',
+                '**Or start the planning coordinator:**',
                 '```',
-                'Use the sdlc-kickoff prompt from .github/prompts/sdlc-kickoff.prompt.md',
+                `Use the software-fabric-kickoff skill and reference issue #${context.issue.number}`,
                 '```',
                 '',
                 '**Pipeline stages:**',
                 '1. 📋 Proposal (Product Owner)',
-                '2. 🏗️ Design + Tasks (Architect)',
-                '3. 💻 Implementation (Developer)',
-                '4. 🧪 Tests (QA Engineer)',
-                '5. 🔒 Security Review (Security Engineer)',
-                '6. 👁️ Code Review (Code Reviewer)',
-                '7. 🚀 Deploy (DevOps/SRE)',
-                '8. 📊 Monitor + Archive (Operations SRE)',
+                '2. 🎨 UX Design when visual interfaces are affected (UX Designer)',
+                '3. 🏗️ Design + Tasks (Architect)',
+                '4. 💻 Implementation (Developer)',
+                '5. 🧪 Tests (QA Engineer)',
+                '6. 🔒 Security Review (Security Engineer)',
+                '7. ⚖️ Legal Review when risk requires it (Legal & Compliance)',
+                '8. 👁️ Code Review (Code Reviewer)',
+                '9. 🚀 Deploy (DevOps/SRE)',
+                '10. 📊 Monitor + Archive (Operations SRE)',
               ].join('\n')
             });
 
@@ -69,15 +74,75 @@ jobs:
               labels: ['stage:proposal']
             });
 
-  # ─── STAGE GATE: PROPOSAL → DESIGN ────────────────────────────────────────
+  # ─── STAGE GATE: PROPOSAL → UX ────────────────────────────────────────────
+  stage-ux-gate:
+    name: "🎨 Stage: UX Design"
+    if: |
+      github.event_name == 'pull_request' &&
+      ((github.event.action == 'labeled' && github.event.label.name == 'stage:ux') ||
+       (github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'stage:ux')))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Validate UX applicability
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          python3 .github/skills/test-generation/scripts/validate_ux_gate.py \
+            --phase ux --base "$BASE_SHA" --head "$HEAD_SHA"
+
+      - name: Comment — UX design stage started
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: [
+                '## 🎨 Stage: UX Design',
+                '',
+                '**UX Designer Agent** — your turn.',
+                '',
+                'Read each accepted proposal UX Applicability decision.',
+                'For visual changes only: create `openspec/changes/<slug>/ux-brief.md`.',
+                'Cover readable content, WCAG 2.2 AA accessibility, visible and discoverable controls,',
+                'responsive desktop/tablet/mobile behavior, and keyboard and touch interactions.',
+                '',
+                'For nonvisual CLI/API/framework changes: create no UX artifacts or UX tests; go directly to `stage:design`.',
+                'Pass the completed visual brief to the Architect by applying `stage:design`.',
+              ].join('\n')
+            });
+
+  # ─── STAGE GATE: UX → DESIGN ──────────────────────────────────────────────
   stage-design-gate:
     name: "🏗️ Stage: Design"
     if: |
       github.event_name == 'pull_request' &&
-      github.event.action == 'labeled' &&
-      github.event.label.name == 'stage:design'
+      ((github.event.action == 'labeled' && github.event.label.name == 'stage:design') ||
+       (github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'stage:design')))
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Validate proposal and applicable UX brief
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          python3 .github/skills/test-generation/scripts/validate_ux_gate.py \
+            --phase design --base "$BASE_SHA" --head "$HEAD_SHA"
+
       - name: Comment — design stage started
         uses: actions/github-script@v7
         with:
@@ -90,39 +155,102 @@ jobs:
                 '## 🏗️ Stage: Design',
                 '',
                 '**Architect Agent** — your turn.',
+                'Require a UX brief only for accepted visual applicability; nonvisual work goes directly to functional design.',
                 '',
                 'Run in VS Code Copilot chat:',
                 '```',
-                '/opsx:apply  ← will detect design stage and create design.md + tasks.md',
+                'Use the spec-to-design skill after proposal acceptance; select the registered OpenSpec store when working in one.',
                 '```',
                 '',
                 'Expected outputs:',
-                '- `spec/openspec/changes/<slug>/design.md`',
-                '- `spec/openspec/changes/<slug>/tasks.md`',
+                '- `openspec/changes/<slug>/design.md`',
+                '- `openspec/changes/<slug>/specs/<domain>/spec.md` (delta spec)',
+                '- `openspec/changes/<slug>/tasks.md`',
               ].join('\n')
             });
 
   # ─── STAGE GATE: IMPLEMENT → TEST ─────────────────────────────────────────
   stage-test-gate:
     name: "🧪 Stage: Test"
+    permissions:
+      contents: read
+      pull-requests: read
+      checks: read
     if: |
       github.event_name == 'pull_request' &&
-      github.event.action == 'labeled' &&
-      github.event.label.name == 'stage:test'
+      ((github.event.action == 'labeled' && github.event.label.name == 'stage:test') ||
+       (github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'stage:test')))
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Validate test UX inputs
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          python3 .github/skills/test-generation/scripts/validate_ux_gate.py \
+            --phase test --base "$BASE_SHA" --head "$HEAD_SHA"
+
+      - name: Validate test stage artifacts
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          changed_files="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+
+          if ! printf '%s\n' "$changed_files" | grep -Eq '(^|/)(tests?|testdata)/|(^|/)(test_.*\.py|.*_test\.py|.*Tests?\.cs)$|^openspec/changes/[^/]+/(tasks\.md|specs/[^/]+/spec\.md)$'; then
+            echo "::error::stage:test requires test artifacts or change delta/task evidence in the PR."
+            exit 1
+          fi
+
+      - name: Require a supported test project
+        if: hashFiles('**/pytest.ini', '**/pyproject.toml', '**/setup.cfg', '**/*.csproj') == ''
+        run: |
+          echo "::error::No supported test project was found. Add pytest configuration or a .NET project."
+          exit 1
 
       - name: Run tests (Python)
         if: hashFiles('**/pytest.ini', '**/pyproject.toml', '**/setup.cfg') != ''
         run: |
-          pip install -q pytest pytest-cov 2>/dev/null || true
-          python3 -m pytest --tb=short -q 2>/dev/null || echo "::warning::Tests not yet set up"
+          set -euo pipefail
+          python3 -m pip install --quiet pytest pytest-cov
+          python3 -m pytest --tb=short -q --cov --cov-report=term-missing --cov-fail-under=80
 
       - name: Run tests (.NET)
         if: hashFiles('**/*.csproj') != ''
-        run: dotnet test --no-build -q 2>/dev/null || echo "::warning::Tests not yet set up"
+        run: dotnet test --no-build --collect:"XPlat Code Coverage" -q
 
+      - name: Validate applicable UX completion
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GH_TOKEN: ${{ github.token }}
+          UX_CHECK_NAMES: ${{ vars.UX_CHECK_NAMES }}
+        run: |
+          set -euo pipefail
+          python3 .github/skills/test-generation/scripts/validate_ux_gate.py \
+            --phase complete --base "$BASE_SHA" --head "$HEAD_SHA"
+
+  stage-test-comment:
+    name: "🧪 Stage: Test Comment"
+    needs: stage-test-gate
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    if: |
+      github.event_name == 'pull_request' &&
+      ((github.event.action == 'labeled' && github.event.label.name == 'stage:test') ||
+       (github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'stage:test'))) &&
+      needs.stage-test-gate.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
       - name: Comment — test stage
         uses: actions/github-script@v7
         with:
@@ -137,10 +265,12 @@ jobs:
                 '**QA Engineer Agent** — your turn.',
                 '',
                 'Generate tests from spec scenarios and achieve ≥80% coverage.',
+                'Use the test-generation skill. For visual changes, validate every UX criterion and record actual evidence.',
+                'CLI/API/framework changes with no affected visual interface need no UX artifacts, UX tests, or UX tooling.',
                 '',
                 'Run in VS Code Copilot chat:',
                 '```',
-                '/opsx:apply  ← will detect test stage and generate test suites',
+                'Use the openspec-apply-change skill; keep the selected OpenSpec store context active.',
                 '```',
               ].join('\n')
             });
@@ -148,145 +278,145 @@ jobs:
   # ─── STAGE GATE: TEST → SECURITY ──────────────────────────────────────────
   stage-security-gate:
     name: "🔒 Stage: Security"
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      checks: read
     if: |
       github.event_name == 'pull_request' &&
-      github.event.action == 'labeled' &&
-      github.event.label.name == 'stage:security'
+      ((github.event.action == 'labeled' && github.event.label.name == 'stage:security') ||
+       (github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'stage:security')))
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@v7
         with:
-          fetch-depth: 0  # full history needed for secrets scan
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
 
-      # ── Python SAST — BLOCKING ──────────────────────────────────────────
-      - name: Python SAST (bandit)
-        if: hashFiles('**/*.py') != ''
-        run: |
-          pip install -q bandit
-          # Exit 1 on MEDIUM+ (severity level -ll); fail the build
-          bandit -r src/ -ll -f txt
-        # NOTE: intentionally no continue-on-error — HIGH/CRITICAL findings BLOCK merge
-
-      # ── Dependency CVE audit — BLOCKING ────────────────────────────────
-      - name: Dependency audit (pip-audit)
-        if: hashFiles('**/requirements*.txt', '**/pyproject.toml') != ''
-        run: |
-          pip install -q pip-audit
-          # --fail-on-vuln exits non-zero when any vulnerability is found
-          pip-audit --format columns --fail-on-vuln
-
-      - name: npm audit
-        if: hashFiles('**/package.json') != ''
-        run: |
-          # --audit-level high: exit non-zero only on HIGH or CRITICAL findings
-          npm audit --audit-level high
-
-      # ── Lockfile hash pinning check ─────────────────────────────────────
-      - name: Verify dependency hash pinning (Python)
-        if: hashFiles('**/requirements*.txt') != ''
+      - name: Require applicable UX validation before security
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GH_TOKEN: ${{ github.token }}
+          UX_CHECK_NAMES: ${{ vars.UX_CHECK_NAMES }}
         run: |
           set -euo pipefail
-          UNPINNED=0
-          while IFS= read -r req_file; do
-            # Warn on any dependency missing both a pinned version and a hash
-            if grep -Eq '^[a-zA-Z]' "$req_file"; then
-              if ! grep -q '\-\-hash=' "$req_file"; then
-                echo "::warning file=${req_file}::No hash pinning found. Consider using pip-compile --generate-hashes."
-                UNPINNED=1
-              fi
-            fi
-          done < <(find . -name 'requirements*.txt' -not -path '*/.venv*' -not -path '*/node_modules*')
-          # Treat unpinned deps as a HIGH finding — block merge
-          [ "$UNPINNED" -eq 0 ] || { echo "::error::One or more requirements files lack hash pinning. See warnings above."; exit 1; }
+          python3 .github/skills/test-generation/scripts/validate_ux_gate.py \
+            --phase security --base "$BASE_SHA" --head "$HEAD_SHA"
 
-      # ── Phantom package detection — BLOCKING ────────────────────────────
-      - name: Phantom package check (PyPI)
-        if: hashFiles('**/requirements*.txt') != ''
+      - name: Verify security automation checks are present and green
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-          PHANTOM=0
-          while IFS= read -r req_file; do
-            while IFS= read -r pkg; do
-              # Strip version specifier and extras
-              CLEAN=$(echo "$pkg" | sed 's/[>=<!\[].*//' | tr -d ' ')
-              [ -z "$CLEAN" ] && continue
-              HTTP_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" \
-                "https://pypi.org/pypi/${CLEAN}/json" || true)
-              if [ "$HTTP_STATUS" != "200" ]; then
-                echo "::error::PHANTOM PACKAGE: '${CLEAN}' returned HTTP ${HTTP_STATUS} from PyPI — possible hallucinated package. BLOCKING MERGE."
-                PHANTOM=1
-              fi
-            done < <(grep -E '^[a-zA-Z]' "$req_file" | sed '/^#/d')
-          done < <(find . -name 'requirements*.txt' -not -path '*/.venv*' -not -path '*/node_modules*')
-          [ "$PHANTOM" -eq 0 ] || exit 1
+          security_checks_json="$(gh pr checks "$PR_NUMBER" --json name,state)"
 
-      - name: Phantom package check (npm)
-        if: hashFiles('**/package.json') != ''
+          matched_count="$(printf '%s' "$security_checks_json" | jq '[.[] | select((.name | ascii_downcase) | test("security|sbom|grype|dependency confusion|lockfile integrity"))] | length')"
+          if [ "$matched_count" -eq 0 ]; then
+            echo "::error::No security automation checks were found on this PR. Ensure Security workflow checks are configured."
+            exit 1
+          fi
+
+          failing_checks="$(printf '%s' "$security_checks_json" | jq -r '.[] | select((.name | ascii_downcase) | test("security|sbom|grype|dependency confusion|lockfile integrity")) | select(.state != "SUCCESS") | "\(.name): \(.state)"')"
+          if [ -n "$failing_checks" ]; then
+            echo "::error::Security automation checks are not green:"
+            echo "$failing_checks"
+            exit 1
+          fi
+
+      - name: Confirm automated security workflow ownership
         run: |
-          set -euo pipefail
-          PHANTOM=0
-          for PKG in $(node -e "const p=require('./package.json'); console.log(Object.keys({...p.dependencies,...p.devDependencies}).join('\n'))" 2>/dev/null || true); do
-            HTTP_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" \
-              "https://registry.npmjs.org/${PKG}" || true)
-            if [ "$HTTP_STATUS" != "200" ]; then
-              echo "::error::PHANTOM PACKAGE: '${PKG}' returned HTTP ${HTTP_STATUS} from npm — possible hallucinated package. BLOCKING MERGE."
-              PHANTOM=1
-            fi
-          done
-          [ "$PHANTOM" -eq 0 ] || exit 1
+          echo "Automated security checks are owned by the standalone Security workflow."
+          echo "Require the Security workflow to pass in branch protection before stage:security."
 
-      # ── Secret scanning — BLOCKING ───────────────────────────────────────
-      - name: Secret scanning (gitleaks)
-        run: |
-          # Pull pinned gitleaks image and scan full branch history
-          docker run --rm \
-            -v "$PWD:/path" \
-            zricethezav/gitleaks:v8.18.4 \
-            detect --source /path --log-opts "origin/main..HEAD" \
-            --exit-code 1 \
-            --redact
-        # non-zero exit code blocks the step — any detected secret blocks merge
-
-      # ── Post security-gate status comment ───────────────────────────────
+  stage-security-comment:
+    name: "🔒 Stage: Security Comment"
+    needs: stage-security-gate
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    if: |
+      always() &&
+      github.event_name == 'pull_request' &&
+      ((github.event.action == 'labeled' && github.event.label.name == 'stage:security') ||
+       (github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'stage:security'))) &&
+      needs.stage-security-gate.result != 'skipped' &&
+      needs.stage-security-gate.result != 'cancelled'
+    runs-on: ubuntu-latest
+    steps:
       - name: Comment — security stage
-        if: always()
         uses: actions/github-script@v7
         with:
           script: |
-            const success = '${{ job.status }}' === 'success';
+            const success = '${{ needs.stage-security-gate.result }}' === 'success';
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
               body: success ? [
-                '## 🔒 Stage: Security — Automated Pre-checks Passed',
+                '## 🔒 Stage: Security — Automated Check Handoff',
                 '',
                 '**Security Engineer Agent** — your turn for the manual review.',
                 '',
-                'The automated gates have passed:',
-                '- ✅ SAST (bandit)',
-                '- ✅ Dependency CVE audit (pip-audit / npm audit)',
-                '- ✅ Lockfile hash pinning verified',
-                '- ✅ Phantom package check (PyPI / npm)',
-                '- ✅ Secret scanning (gitleaks)',
+                'The standalone `Security` workflow owns the automated security checks:',
+                '- ✅ SAST and dependency vulnerability checks',
+                '- ✅ SBOM generation and Grype scanning',
+                '- ✅ Lockfile integrity and phantom package checks',
+                '- ✅ Secret scanning and container image pinning',
+                '',
+                'The `Security` workflow must pass through branch protection before merge.',
                 '',
                 'Run the full security review in VS Code Copilot chat:',
                 '```',
-                '/opsx:verify  ← runs security review + OWASP + supply chain + code review',
+                'Use the openspec-verify-change skill with the selected OpenSpec store, when applicable.',
                 '```',
                 '',
                 'Security gate: no CRITICAL or HIGH findings to merge.',
               ].join('\n') : [
                 '## 🔒 Stage: Security — ❌ AUTOMATED GATE FAILED',
                 '',
-                '**Merge is BLOCKED.** One or more automated security checks failed.',
+                '**Merge is BLOCKED.** A required UX validation or automated security check failed.',
                 '',
-                'Check the workflow run logs for details:',
-                `- Bandit SAST, pip-audit, npm audit, lockfile pinning, phantom package check, or gitleaks`,
+                'Check this gate and the `Security` workflow run logs for details.',
                 '',
                 '**Developer Agent** — remediate all flagged issues and re-push.',
                 '',
                 '> No manual security review will be started until the automated gate passes.',
+              ].join('\n')
+            });
+
+  # ─── STAGE GATE: SECURITY → LEGAL (WHEN REQUIRED) → REVIEW ──────────────
+  stage-legal-gate:
+    name: "⚖️ Stage: Legal Review"
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.action == 'labeled' &&
+      github.event.label.name == 'stage:legal'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment — legal review stage
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: [
+                '## ⚖️ Stage: Legal Review',
+                '',
+                '**Legal & Compliance Agent** — review the change using `.github/skills/legal-compliance-review.md`.',
+                '',
+                'Required output: post a Legal Risk Assessment comment with the decision, risk rating, evidence, and any remediation or counsel escalation.',
+                '',
+                'Disposition labels:',
+                '- `legal:approved` — all required legal review and sign-off are complete; apply `stage:review` to continue.',
+                '- `legal:blocked` — unresolved legal risk; review and deployment are blocked.',
+                '',
+                'A PR carrying `stage:legal` cannot enter review or deployment without `legal:approved`.',
               ].join('\n')
             });
 
@@ -299,7 +429,23 @@ jobs:
       github.event.label.name == 'stage:review'
     runs-on: ubuntu-latest
     steps:
+      - name: Verify legal disposition
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(({ name }) => name);
+            const legalBlocked = labels.includes('legal:blocked');
+            const legalReviewRequired = labels.includes('stage:legal');
+            const legalApproved = labels.includes('legal:approved');
+
+            if (legalBlocked) {
+              core.setFailed('stage:review is blocked while legal:blocked is present. Resolve the legal review before proceeding.');
+            } else if (legalReviewRequired && !legalApproved) {
+              core.setFailed('stage:review requires legal:approved when stage:legal is present. Post the Legal Risk Assessment and record a disposition.');
+            }
+
       - name: Comment — review stage
+        if: success()
         uses: actions/github-script@v7
         with:
           script: |
@@ -314,7 +460,7 @@ jobs:
                 '',
                 'Run in VS Code Copilot chat:',
                 '```',
-                '/opsx:verify  ← includes code review stage',
+                'Use the openspec-verify-change skill with the selected OpenSpec store, when applicable.',
                 '```',
                 '',
                 'Review against `design.md` requirements and coding standards.',
@@ -331,7 +477,23 @@ jobs:
       github.event.label.name == 'stage:deploy'
     runs-on: ubuntu-latest
     steps:
+      - name: Verify legal disposition
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(({ name }) => name);
+            const legalBlocked = labels.includes('legal:blocked');
+            const legalReviewRequired = labels.includes('stage:legal');
+            const legalApproved = labels.includes('legal:approved');
+
+            if (legalBlocked) {
+              core.setFailed('stage:deploy is blocked while legal:blocked is present. Resolve the legal review before proceeding.');
+            } else if (legalReviewRequired && !legalApproved) {
+              core.setFailed('stage:deploy requires legal:approved when stage:legal is present. Post the Legal Risk Assessment and record a disposition.');
+            }
+
       - name: Comment — deploy stage
+        if: success()
         uses: actions/github-script@v7
         with:
           script: |
@@ -363,23 +525,23 @@ jobs:
       (github.event.action == 'labeled' || github.event.action == 'ready_for_review')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@v7
 
-      - name: Validate spec/openspec structure
+      - name: Validate openspec structure
         run: |
           echo "Validating OpenSPEC structure..."
           
           # Check config exists
-          [ -f "spec/openspec/config.yaml" ] && echo "✅ config.yaml present" || echo "❌ config.yaml missing"
+          [ -f "openspec/config.yaml" ] && echo "✅ config.yaml present" || echo "❌ config.yaml missing"
           
           # Check domain specs exist
-          for domain in sdlc-process personas idea-capture security-standards testing-standards operations; do
-            [ -f "spec/openspec/specs/$domain/spec.md" ] \
+          for domain in sdlc-process personas idea-capture security-standards testing-standards operations legal-compliance; do
+            [ -f "openspec/specs/$domain/spec.md" ] \
               && echo "✅ specs/$domain/spec.md present" \
               || echo "⚠️  specs/$domain/spec.md missing"
           done
           
           # Check changes directory
-          [ -d "spec/openspec/changes" ] && echo "✅ changes/ directory present" || echo "❌ changes/ missing"
+          [ -d "openspec/changes" ] && echo "✅ changes/ directory present" || echo "❌ changes/ missing"
           
           echo "OpenSPEC validation complete."
