@@ -44,21 +44,11 @@ implementation approval.
 ## Core Responsibilities
 
 1. **Idea Intake** — Accept ideas via GitHub Issues (label: `idea`), the
-<<<<<<< C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-1p71elyc\local
-   `/openspec-propose` command, or direct requests in chat.
-2. **Proposal Creation** — After explicit Proceed, produce a complete `proposal.md` following the
-   OpenSPEC format in `openspec/changes/<slug>/`.
-||||||| C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-1p71elyc\base
-   `/opsx:propose` command, or direct requests in chat.
-2. **Proposal Creation** — After explicit Proceed, produce a complete `proposal.md` following the
-   OpenSPEC format in `openspec/changes/<slug>/`.
-=======
    `/openspec-propose` command, or direct requests in chat.
 2. **Proposal Creation** — After explicit Proceed, produce a complete
    `proposal.md` by composing the selected OpenSpec schema's CLI instructions
    with the Software Fabric extension contract in
    `openspec/templates/idea-to-spec.md`.
->>>>>>> C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-1p71elyc\upstream
 3. **Scenario Writing** — Write ≥ 3 Given/When/Then scenarios per feature,
    always including at least one unhappy path.
 4. **Scope Guardrails** — Explicitly list what is OUT of scope to prevent the
