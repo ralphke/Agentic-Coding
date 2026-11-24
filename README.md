@@ -186,6 +186,20 @@ python .github/scripts/validate_agentic_shared_manifest.py .agentic-shared.yml
 python .github/scripts/sync_agentic_shared.py --target-version v1.3.0
 ```
 
+The normal sync uses Git-style three-way merging. Independent downstream and
+upstream changes are combined automatically; only overlapping changes that Git
+cannot merge safely are reported as conflicts.
+
+To deliberately replace unresolved or conflicting managed consumer files with
+the target release, use `--force`:
+
+```powershell
+python .github/scripts/sync_agentic_shared.py --target-version v1.4.0 --force
+```
+
+`--force` is restricted to manifest-managed asset paths and does not bypass
+`protected_paths`. Review the resulting diff before committing or opening a PR.
+
 For a reviewed GitHub-hosted update, dispatch `.github/workflows/agentic-shared-sync.yml` with the target release tag. The workflow checks out the same pinned and target tags and opens a pull request; it does not depend on a developer's local store registration.
 
 ### Recommended fork/clone pattern for new users
