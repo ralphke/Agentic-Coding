@@ -11,6 +11,11 @@ on:
         description: Tagged agentic-shared release to install, for example v1.1.0
         required: true
         type: string
+      force:
+        description: Replace conflicting managed consumer files with target-release versions
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -70,15 +75,22 @@ jobs:
           token: ${{ secrets.AGENTIC_SHARED_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Validate and synchronize assets
+        env:
+          FORCE: ${{ inputs.force }}
         run: |
           python -m pip install --disable-pip-version-check --quiet PyYAML
           python shared-new/.github/scripts/validate_agentic_shared_manifest.py consumer/.agentic-shared.yml
-          PYTHONPATH=shared-new/.github/scripts python shared-new/.github/scripts/sync_agentic_shared.py \
-            --manifest consumer/.agentic-shared.yml \
-            --old-source shared-old \
-            --new-source shared-new \
-            --destination consumer \
+          args=(
+            --manifest consumer/.agentic-shared.yml
+            --old-source shared-old
+            --new-source shared-new
+            --destination consumer
             --target-version '${{ inputs.target_version }}'
+          )
+          if [[ "$FORCE" == "true" ]]; then
+            args+=(--force)
+          fi
+          PYTHONPATH=shared-new/.github/scripts python shared-new/.github/scripts/sync_agentic_shared.py "${args[@]}"
 
       - name: Open synchronization pull request
         uses: peter-evans/create-pull-request@v7
@@ -94,6 +106,8 @@ jobs:
 
             The sync validator ran with three-way conflict detection. Review the
             generated diff and run consumer CI before merging.
+            Managed conflicts are overwritten only when the workflow `force`
+            input is enabled.
           labels: |
             dependencies
             agentic-shared-sync

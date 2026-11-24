@@ -58,9 +58,19 @@ review.
 ## To Work on an Existing Change
 
 ```text
+<<<<<<< C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-c6hmr0gu\local
 /openspec-apply-change <change-slug>    # Implement tasks
 /openspec-sync-specs <change-slug>     # Preview spec merge
 /openspec-archive-change <change-slug>  # Complete the change
+||||||| C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-c6hmr0gu\base
+/opsx:apply <change-slug>    # Implement tasks
+/opsx:sync <change-slug>     # Preview spec merge
+/opsx:archive <change-slug>  # Complete the change
+=======
+/openspec-apply <change-slug>    # Implement tasks
+/openspec-sync <change-slug>     # Preview spec merge
+/openspec-archive <change-slug>  # Complete the change
+>>>>>>> C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-c6hmr0gu\upstream
 ```
 
 ## Spec Location Convention
@@ -84,7 +94,10 @@ authorization only, not proposal/spec acceptance or implementation approval.
    and tasks are required; verify explicit acceptance of the current
    proposal/spec before implementation. CLI readiness or skipped required
    artifacts cannot waive this gate.
-2. **No merge without security** — security gate must pass
+2. **No merge without security** — security gate must pass. A
+   `security:devcontainer-warning` is a temporary validation-lane outcome with
+   reviewer, owner, expiry, and mandatory follow-up evidence; it never transfers
+   to application, merge, release, deployment, or archive security.
 3. **No release without legal review when the proposal is high-risk** — if a
    solution risks fines, legal violations, unauthorized handling of PII or
    sensitive data, rights conflicts, or non-compliant third-party use, the Legal
