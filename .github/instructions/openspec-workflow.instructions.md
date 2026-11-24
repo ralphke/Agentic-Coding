@@ -61,6 +61,24 @@ version, treat this the same as Stop Condition #2.
 - **Archived changes:** `openspec/changes/archive/<date>-<slug>/`
 - **Config:** `openspec/config.yaml`
 
+## Layered Proposal Format
+
+For proposal creation, run
+`openspec instructions proposal --change "<slug>" --json` and treat its
+`template`, `instruction`, and `rules` as the authoritative schema-owned core.
+Compose the returned core with the Software Fabric extensions documented in
+`openspec/templates/idea-to-spec.md`. Do not copy the package template into a
+repository-owned replacement or emit legacy `Intent` and `Affected Domains`
+headings in new proposals. Existing active proposals may use those two bounded
+aliases during migration, but they remain subject to all extension and
+capability-mapping checks.
+
+Required extensions are scope, non-goals, concise product scenarios with an
+unhappy path, binary acceptance criteria, UX applicability, Build / Buy / Vibe,
+and applicable legal/IP notes. Preserve the core capability declarations and
+require every declared capability to map exactly one-to-one to a delta spec
+path.
+
 ## Delta Spec Format
 
 When creating `specs/<domain>/spec.md` inside a change folder, use ADDED /
@@ -177,6 +195,13 @@ invalidate acceptance, pause affected implementation until acceptance is renewed
 - [ ] No removed requirements are still referenced elsewhere.
 - [ ] All CI checks are green (build, lint, unit tests).
 - [ ] Security review has passed with no HIGH or CRITICAL findings.
+      A devcontainer-only `security:devcontainer-warning` may permit the local
+      devcontainer validation lane to continue only with explicit reviewer
+      justification, remediation owner, expiry or renewal point, linked
+      mandatory follow-up, and evidence that the finding is isolated from
+      production. It is never passing security evidence for application, merge,
+      release, deployment, or archive; incomplete or expired warnings return to
+      blocking behavior.
 - [ ] New-code coverage is at least 80%.
 - [ ] At least one code-review approval (human or AI) is present.
 - [ ] All spec acceptance criteria are satisfied.

@@ -14,9 +14,13 @@ from unittest.mock import patch
 import yaml
 
 from sync_agentic_shared import (
+    SyncConflictError,
     checkout_store_revision,
     main,
+    merge_three_way,
     resolve_store_root,
+    synchronize,
+    _same_file,
 )
 from validate_agentic_shared_manifest import (
     ManifestValidationError,
@@ -25,12 +29,231 @@ from validate_agentic_shared_manifest import (
 
 
 class OpenSpecStoreResolutionTests(unittest.TestCase):
+    def test_same_file_normalizes_line_endings(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            lf = root / "lf"
+            crlf = root / "crlf"
+            lf.write_bytes(b"line 1\nline 2\n")
+            crlf.write_bytes(b"line 1\r\nline 2\r\n")
+
+            self.assertTrue(_same_file(lf, crlf))
+
+    def test_force_overwrites_conflicting_managed_file(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            old_source = root / "old"
+            new_source = root / "new"
+            destination = root / "destination"
+            relative = Path(".github/skills/shared.md")
+
+            for source_root, content in (
+                (old_source, "old"),
+                (new_source, "new"),
+                (destination, "local"),
+            ):
+                path = source_root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content, encoding="utf-8")
+
+            manifest = {
+                "source": {"repository": "ralphke/agentic-shared", "version": "v1.1.0"},
+                "assets": {"skills": "managed"},
+                "protected_paths": [],
+            }
+
+            changed = synchronize(
+                manifest,
+                old_source,
+                new_source,
+                destination,
+                "v1.1.0",
+                force=True,
+            )
+
+            self.assertEqual(changed, [relative])
+            self.assertEqual(
+                (destination / relative).read_text(encoding="utf-8"),
+                "new",
+            )
+            self.assertEqual(manifest["source"]["version"], "v1.1.0")
+
+    def test_force_keeps_protected_file_and_fails_without_force(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            old_source = root / "old"
+            new_source = root / "new"
+            destination = root / "destination"
+            relative = Path(".github/skills/local/custom.md")
+
+            for source_root, content in (
+                (old_source, "old"),
+                (new_source, "new"),
+                (destination, "local"),
+            ):
+                path = source_root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content, encoding="utf-8")
+
+            manifest = {
+                "source": {"repository": "ralphke/agentic-shared", "version": "v1.1.0"},
+                "assets": {"skills": "managed"},
+                "protected_paths": [".github/skills/local/**"],
+            }
+
+            changed = synchronize(
+                manifest,
+                old_source,
+                new_source,
+                destination,
+                "v1.1.0",
+                force=True,
+            )
+
+            self.assertEqual(changed, [])
+            self.assertEqual(
+                (destination / relative).read_text(encoding="utf-8"),
+                "local",
+            )
+
+    def test_normal_sync_preserves_downstream_edit_when_upstream_is_unchanged(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            old_source = root / "old"
+            new_source = root / "new"
+            destination = root / "destination"
+            relative = Path(".github/agents/architect.agent.md")
+
+            for source_root, content in (
+                (old_source, "base\n"),
+                (new_source, "base\n"),
+                (destination, "base\nconsumer edit\n"),
+            ):
+                path = source_root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content, encoding="utf-8")
+
+            manifest = {
+                "source": {"repository": "ralphke/agentic-shared", "version": "v1.1.0"},
+                "assets": {"agents": "managed"},
+                "protected_paths": [],
+            }
+
+            changed = synchronize(
+                manifest,
+                old_source,
+                new_source,
+                destination,
+                "v1.1.0",
+            )
+
+            self.assertEqual(changed, [])
+            self.assertEqual(
+                (destination / relative).read_text(encoding="utf-8"),
+                "base\nconsumer edit\n",
+            )
+
+    def test_normal_sync_merges_separate_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            old_source = root / "old"
+            new_source = root / "new"
+            destination = root / "destination"
+            relative = Path(".github/agents/operations-sre.agent.md")
+
+            for source_root, content in (
+                (old_source, "top\nmiddle\nbottom\n"),
+                (new_source, "top\nupstream\nmiddle\nbottom\n"),
+                (destination, "top\nmiddle\nbottom\nlocal\n"),
+            ):
+                path = source_root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content, encoding="utf-8")
+
+            manifest = {
+                "source": {"repository": "ralphke/agentic-shared", "version": "v1.1.0"},
+                "assets": {"agents": "managed"},
+                "protected_paths": [],
+            }
+
+            changed = synchronize(
+                manifest,
+                old_source,
+                new_source,
+                destination,
+                "v1.1.0",
+            )
+
+            self.assertEqual(changed, [relative])
+            self.assertEqual(
+                (destination / relative).read_text(encoding="utf-8"),
+                "top\nupstream\nmiddle\nbottom\nlocal\n",
+            )
+
+    def test_normal_sync_reports_overlapping_changes_as_conflicts(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            old_source = root / "old"
+            new_source = root / "new"
+            destination = root / "destination"
+            relative = Path(".github/agents/operations-sre.agent.md")
+
+            for source_root, content in (
+                (old_source, "top\nmiddle\nbottom\n"),
+                (new_source, "top\nupstream\nbottom\n"),
+                (destination, "top\nlocal\nbottom\n"),
+            ):
+                path = source_root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content, encoding="utf-8")
+
+            manifest = {
+                "source": {"repository": "ralphke/agentic-shared", "version": "v1.1.0"},
+                "assets": {"agents": "managed"},
+                "protected_paths": [],
+            }
+
+            with self.assertRaisesRegex(
+                SyncConflictError,
+                r"clean hunks were applied",
+            ):
+                synchronize(
+                    manifest,
+                    old_source,
+                    new_source,
+                    destination,
+                    "v1.1.0",
+                )
+
+            conflicted = (destination / relative).read_text(encoding="utf-8")
+            self.assertIn("<<<<<<<", conflicted)
+            self.assertIn("|||||||", conflicted)
+            self.assertIn(">>>>>>>", conflicted)
+
+    def test_merge_three_way_returns_clean_merge_result(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            local = root / "local"
+            base = root / "base"
+            upstream = root / "upstream"
+            local.write_bytes(b"top\nmiddle\nbottom\nlocal\n")
+            base.write_bytes(b"top\nmiddle\nbottom\n")
+            upstream.write_bytes(b"top\nupstream\nmiddle\nbottom\n")
+
+            merged, content = merge_three_way(local, base, upstream)
+
+            self.assertTrue(merged)
+            self.assertEqual(
+                content.decode("utf-8"),
+                "top\nupstream\nmiddle\nbottom\nlocal\n",
+            )
+
     def test_manifest_accepts_registered_store_id(self) -> None:
         manifest = {
             "source": {
                 "repository": "ralphke/agentic-shared",
                 "store_id": "agentic-shared",
-                "version": "v1.2.0",
+                "version": "v1.4.0",
             },
             "assets": {"skills": "managed"},
         }
@@ -42,7 +265,7 @@ class OpenSpecStoreResolutionTests(unittest.TestCase):
             "source": {
                 "repository": "ralphke/agentic-shared",
                 "store_id": "../other-store",
-                "version": "v1.2.0",
+                "version": "v1.4.0",
             },
             "assets": {"skills": "managed"},
         }

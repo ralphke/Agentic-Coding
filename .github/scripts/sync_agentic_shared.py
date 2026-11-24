@@ -114,7 +114,60 @@ def _relative_files(root: Path, asset_root: Path) -> set[Path]:
 
 
 def _same_file(left: Path, right: Path) -> bool:
-    return left.exists() and right.exists() and left.read_bytes() == right.read_bytes()
+    if not left.exists() or not right.exists():
+        return False
+    left_content = left.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    right_content = right.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return left_content == right_content
+
+
+def merge_three_way(
+    local_path: Path,
+    base_path: Path,
+    upstream_path: Path,
+) -> tuple[bool, bytes]:
+    """Merge local and upstream changes against their base using Git merge-file."""
+    local_content = local_path.read_bytes()
+    base_content = base_path.read_bytes()
+    upstream_content = upstream_path.read_bytes()
+    newline = b"\r\n" if b"\r\n" in local_content else b"\n"
+
+    with tempfile.TemporaryDirectory(prefix="agentic-shared-merge-") as temp_dir:
+        temp = Path(temp_dir)
+        local_temp = temp / "local"
+        base_temp = temp / "base"
+        upstream_temp = temp / "upstream"
+
+        local_temp.write_bytes(local_content.replace(b"\r\n", b"\n").replace(b"\r", b"\n"))
+        base_temp.write_bytes(base_content.replace(b"\r\n", b"\n").replace(b"\r", b"\n"))
+        upstream_temp.write_bytes(
+            upstream_content.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+        )
+
+        result = subprocess.run(
+            [
+                "git",
+                "merge-file",
+                "--diff3",
+                "-p",
+                str(local_temp),
+                str(base_temp),
+                str(upstream_temp),
+            ],
+            check=False,
+            capture_output=True,
+        )
+        if result.returncode == 255:
+            detail = result.stderr.decode("utf-8", errors="replace").strip()
+            raise RuntimeError(
+                detail
+                or f"git merge-file failed with exit code {result.returncode}"
+            )
+
+        merged_content = result.stdout.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+        if newline == b"\r\n":
+            merged_content = merged_content.replace(b"\n", b"\r\n")
+        return result.returncode == 0, merged_content
 
 
 def synchronize(
@@ -123,11 +176,12 @@ def synchronize(
     new_root: Path,
     destination_root: Path,
     target_version: str,
+    force: bool = False,
 ) -> list[Path]:
     """Apply a three-way sync and return changed destination paths."""
     protected_patterns = manifest.get("protected_paths", [])
     conflicts: list[Path] = []
-    operations: list[tuple[str, Path, Path | None]] = []
+    operations: list[tuple[str, Path, Path | bytes | None]] = []
 
     for asset_group, ownership_mode in manifest["assets"].items():
         if ownership_mode == "local":
@@ -151,49 +205,88 @@ def synchronize(
             destination_exists = destination_path.exists()
 
             if not old_exists:
-                if new_exists and (
-                    not destination_exists or not _same_file(destination_path, new_path)
-                ):
-                    operations.append(("copy", destination_path, new_path))
+                if new_exists:
+                    if not destination_exists:
+                        operations.append(("copy", destination_path, new_path))
+                    elif not _same_file(destination_path, new_path):
+                        if force:
+                            operations.append(("copy", destination_path, new_path))
+                        else:
+                            conflicts.append(relative_path)
                 continue
 
             if old_exists and not destination_exists:
                 if new_exists:
-                    conflicts.append(relative_path)
-                continue
-
-            if old_exists and destination_exists and not _same_file(destination_path, old_path):
-                if new_exists and not _same_file(new_path, old_path):
-                    conflicts.append(relative_path)
+                    if force:
+                        operations.append(("copy", destination_path, new_path))
+                    else:
+                        conflicts.append(relative_path)
                 continue
 
             if not new_exists:
-                if destination_exists:
+                if not destination_exists:
+                    continue
+                if _same_file(destination_path, old_path):
                     operations.append(("delete", destination_path, None))
+                elif force:
+                    operations.append(("delete", destination_path, None))
+                else:
+                    conflicts.append(relative_path)
                 continue
 
-            if destination_exists and _same_file(destination_path, new_path):
+            # The upstream version did not change. Preserve the consumer edit.
+            if _same_file(new_path, old_path):
+                continue
+
+            # The consumer version did not change. Apply the upstream version.
+            if _same_file(destination_path, old_path):
+                operations.append(("copy", destination_path, new_path))
+                continue
+
+            # Both sides changed. Merge them when the hunks are independent.
+            if destination_exists:
+                if force:
+                    operations.append(("copy", destination_path, new_path))
+                else:
+                    merged, merged_content = merge_three_way(
+                        destination_path,
+                        old_path,
+                        new_path,
+                    )
+                    if merged:
+                        if merged_content != destination_path.read_bytes():
+                            operations.append(("write", destination_path, merged_content))
+                    else:
+                        if merged_content != destination_path.read_bytes():
+                            operations.append(("write", destination_path, merged_content))
+                        conflicts.append(relative_path)
                 continue
 
             operations.append(("copy", destination_path, new_path))
-
-    if conflicts:
-        paths = "\n".join(f"- {path.as_posix()}" for path in conflicts)
-        raise SyncConflictError(
-            "managed synchronization conflicts detected; no files were changed:\n"
-            + paths
-        )
 
     changed_paths: list[Path] = []
     for operation, destination_path, source_path in operations:
         if operation == "delete":
             destination_path.unlink()
+        elif operation == "write":
+            if not isinstance(source_path, bytes):
+                raise RuntimeError("write operation is missing its content")
+            destination_path.parent.mkdir(parents=True, exist_ok=True)
+            destination_path.write_bytes(source_path)
         else:
-            if source_path is None:
+            if not isinstance(source_path, Path):
                 raise RuntimeError("copy operation is missing its source path")
             destination_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source_path, destination_path)
         changed_paths.append(destination_path.relative_to(destination_root))
+
+    if conflicts:
+        paths = "\n".join(f"- {path.as_posix()}" for path in conflicts)
+        raise SyncConflictError(
+            "managed synchronization conflicts detected; clean hunks were applied and "
+            "conflict markers were written:\n"
+            + paths
+        )
 
     manifest["source"]["version"] = target_version
     return changed_paths
@@ -207,6 +300,11 @@ def main() -> int:
     parser.add_argument("--new-source", type=Path)
     parser.add_argument("--destination", type=Path, default=Path("."))
     parser.add_argument("--target-version", required=True)
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="overwrite managed files with conflicts using the target release",
+    )
     args = parser.parse_args()
 
     try:
@@ -244,6 +342,7 @@ def main() -> int:
                     new_source,
                     args.destination,
                     args.target_version,
+                    args.force,
                 )
         else:
             changed_paths = synchronize(
@@ -252,6 +351,7 @@ def main() -> int:
                 args.new_source,
                 args.destination,
                 args.target_version,
+                args.force,
             )
 
         with args.manifest.open("w", encoding="utf-8", newline="\n") as manifest_file:

@@ -53,6 +53,18 @@ brief before architecture; nonvisual CLI/API/framework changes require no UX
 artifacts or UX tests. Missing or conflicting applicability pauses planning.
 Normal functional specs, tests, and approval gates remain required.
 
+**Layered proposal format:** Treat the `template`, `instruction`, and `rules`
+returned by `openspec instructions proposal` as the authoritative schema-owned
+core. Compose the CLI core with the mandatory Software Fabric extensions in
+`openspec/templates/idea-to-spec.md`: `Scope`, `Out of Scope`, concise product
+`Scenarios`, binary `Acceptance Criteria`, `UX Applicability`,
+`Build / Buy / Vibe`, and applicable `Legal / IP Notes`. Do not emit legacy
+`Intent` or `Affected Domains`
+headings for new proposals. Require every declared capability to map one-to-one
+to a delta spec path. If repository extensions cannot be reconciled with the
+selected schema, stop and report the conflict rather than copying a prior
+template or guessing.
+
 **Planning boundary**: This workflow creates planning artifacts only. The user request that selected or triggered this workflow authorizes planning only, even if it asks to build or fix something. Do not edit project code. After the planning artifacts are complete, stop. Do not start implementation in the same response, even if the initial request asks for it. Wait for a new user request after the artifacts are presented; then start the apply workflow.
 
 I'll create a change with the artifacts your schema defines. With the default spec-driven schema that is:
@@ -218,6 +230,9 @@ After completing all artifacts, summarize:
 - Follow the `instruction` field from `openspec instructions` for each artifact type - it is the authoritative guidance, even for familiar artifact names
 - If the `instruction` field directs you to use a specific skill or command to create the artifact, invoke it instead of writing the artifact directly - but only once you have chosen and checked the output path, and only if it can write there
 - The schema defines what each artifact should contain - follow it
+- For proposal core headings, the CLI instruction response overrides copied
+  examples and prior proposals. Apply repository guidance only as extensions
+  and constraints.
 - Read dependency artifacts for context before creating new ones
 - Use `template` as the structure for your output file - fill in its sections
 - **IMPORTANT**: `context` and `rules` are constraints for YOU, not content for the file
