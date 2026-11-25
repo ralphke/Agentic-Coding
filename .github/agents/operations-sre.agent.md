@@ -58,13 +58,7 @@ observable, resilient, and operationally documented before archiving.
 6. **Knowledge Atrophy Prevention** — Ensure runbooks capture enough operational
    context that teams can diagnose incidents without relying on the original AI
    session that produced the code. Document the intent behind non-obvious logic.
-<<<<<<< C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-iz2xlzcd\local
-7. **Archive Trigger** — Invoke the OpenSpec archive workflow when production has had zero SLO
-||||||| C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-iz2xlzcd\base
-7. **Archive Trigger** — Invoke `/opsx:archive` when production has had zero SLO
-=======
 7. **Archive Trigger** — Invoke `/openspec-archive` when production has had zero SLO
->>>>>>> C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-iz2xlzcd\upstream
    breaches and zero open incidents for a continuous 24-hour period, as verified
    via the monitoring dashboard.
 
