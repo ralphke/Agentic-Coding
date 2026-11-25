@@ -3,332 +3,583 @@
 ## Agentic-Coding
 
 ![Agentic-Coding](image/Agentic-coding.png)
-This repository hosts a hands-on workshop for beginner, intermediate, and advanced developers to learn how to use GitHub Copilot effectively.
 
-## Learning goals
+This repository is a hands-on workshop and reference implementation for
+GitHub Copilot, coding agents, spec-driven development, and an agentic
+issue-to-delivery workflow. It contains beginner, intermediate, and advanced
+labs plus reusable Software Fabric agents, instructions, skills, OpenSpec
+content, workflows, and MCP configuration.
+
+## Start here
+
+The shortest path for a first-time participant is:
+
+1. Make sure your GitHub account has an active Copilot entitlement.
+2. Fork or clone this repository.
+3. Use GitHub Codespaces, a local devcontainer, or a native workstation setup.
+4. Authenticate GitHub and any optional external services.
+5. Complete [Lab 01](lab/01-beginner/01-copilot-foundations.md).
+
+### 1. GitHub and Copilot prerequisites
+
+You need:
+
+- A GitHub account.
+- An active [GitHub Copilot
+  subscription](https://docs.github.com/copilot/about-github-copilot/plans-for-github-copilot)
+  through an individual plan or an organization/enterprise plan.
+- Permission from your organization to use Copilot if your seat is managed by
+  an organization. An administrator may also need to enable the Copilot coding
+  agent, MCP servers, and repository access.
+- [VS Code Insiders](https://code.visualstudio.com/insiders/) with the
+  [VS Code Agents application](https://code.visualstudio.com/docs/copilot/agents-app)
+  for the workshop's agent-first workflow.
+- Git. GitHub CLI (`gh`) is included in the devcontainer and is recommended
+  for local authentication checks.
+
+You can run Lab 01 with Copilot Chat and inline assistance. The autonomous
+issue-to-pull-request features additionally require the coding agent to be
+available to your account or organization and allowed on the target repository.
+Check your
+[Copilot settings](https://docs.github.com/en/copilot/managing-copilot/managing-github-copilot-in-your-organization)
+before troubleshooting repository automation.
+
+### 2. Fork or clone
+
+Fork the repository on GitHub if you want to keep your workshop changes,
+create issues, run Actions, or exercise pull-request workflows. Otherwise,
+clone it read-only for local experimentation.
+
+```powershell
+cd C:\repos
+git clone https://github.com/<your-user>/Agentic-Coding.git
+cd Agentic-Coding
+```
+
+macOS or Linux shell:
+
+```bash
+mkdir -p ~/repos
+cd ~/repos
+git clone https://github.com/<your-user>/Agentic-Coding.git
+cd Agentic-Coding
+```
+
+Sign in before using GitHub CLI or Copilot CLI:
+
+```bash
+gh auth login
+gh auth status
+```
+
+If you use the coding-agent workflows in a fork, enable GitHub Actions in the
+fork and confirm that the workflow token has the repository permissions needed
+for the task.
+
+### 3. Where credentials belong
+
+Never commit tokens, passwords, private endpoints, or client secrets to this
+repository. Do not place real values in `.mcp.json`, agent Markdown files,
+workflow YAML, or lab files.
+
+| Situation | Store credentials here |
+| --- | --- |
+| Interactive local use of GitHub | Run `gh auth login`; GitHub CLI stores the credential in the operating-system credential store |
+| VS Code and GitHub Copilot | Use the VS Code sign-in flow; do not paste a Copilot token into configuration |
+| GitHub Actions | **Repository Settings → Secrets and variables → Actions → New repository secret** |
+| GitHub Codespaces | **Repository Settings → Codespaces → Secrets → New repository secret**, or your GitHub user-level Codespaces secrets for values shared across repositories |
+| Azure MCP / Azure CLI | Run `az login`; optionally select the intended subscription with `az account set --subscription <name-or-id>` |
+| A custom MCP server | Keep the token in an environment variable, IDE secret input, Codespaces secret, or deployment secret store, then reference it from `.mcp.json` |
+| Shared-asset sync to a non-public upstream | Add `AGENTIC_SHARED_TOKEN` as an Actions secret; the current public `agentic-shared` flow falls back to `GITHUB_TOKEN` |
+
+Local examples:
+
+```powershell
+# PowerShell - current terminal only
+$env:SECURITY_MCP_TOKEN = "<token>"
+```
+
+```bash
+# macOS/Linux - current terminal only
+export SECURITY_MCP_TOKEN="<token>"
+```
+
+Store a persistent local secret in your operating-system credential or secret
+manager rather than a tracked shell script. The repository ignores `.env*`
+files, but ignore rules are not a secret-management system: do not rely on a
+local `.env` file for high-value credentials.
+
+### 4. Choose an environment
+
+All three paths are supported:
+
+| Environment | Best for | Extra local prerequisite |
+| --- | --- | --- |
+| GitHub Codespaces | Fastest onboarding with no local Docker or tool installation | Codespaces access/quota |
+| Local devcontainer | Reproducible Linux toolchain on Windows or macOS | Docker-compatible container runtime and the Dev Containers extension |
+| Native workstation | Direct host development and no container | Install the toolchain listed below |
+
+The active `.devcontainer/devcontainer.json` is the source of truth. It builds
+from Microsoft's public
+`mcr.microsoft.com/devcontainers/base:ubuntu` image, then installs pinned
+Dev Container Features and the repository's `workshop-tools` feature.
+
+### 5. Verify the environment
+
+Inside Codespaces or the devcontainer, run:
+
+```bash
+git --version
+gh --version
+copilot --version
+python3.14 --version
+dotnet --version
+dab --version
+aspire --version
+openspec --version
+docker --version
+bash scripts/devcontainer-smoke-check.sh
+```
+
+`docker --version` verifies the Docker-outside-of-Docker client. Docker-backed
+workloads also need a usable host daemon. The smoke check reports individual
+passes, warnings, and failures rather than hiding missing tools.
+
+## GitHub Codespaces
+
+Codespaces is the easiest option for a new participant:
+
+1. Open your fork or this repository on GitHub.
+2. Select **Code → Codespaces → Create codespace on main**.
+3. Choose a machine size and wait for the repository container to be created.
+4. After VS Code loads, wait for the post-create command to finish.
+5. Run the verification commands above.
+
+Benefits:
+
+- No Docker Desktop, Python, .NET, Node.js, DAB, or OpenSpec installation on the
+  host.
+- The same `.devcontainer/devcontainer.json` used by local participants.
+- Forwarded ports appear in the **Ports** tab.
+- Fork and repository secrets can be supplied as Codespaces secrets without
+  writing them to disk.
+
+The first creation or a full rebuild can take several minutes. Codespaces pulls
+the Microsoft base image, resolves container features, runs package upgrades,
+and installs Python, .NET, Aspire, Copilot CLI, DAB, Trivy, and OpenSpec.
+Subsequent reconnects are normally faster, especially while the Codespace is
+preserved.
+
+Do not configure Codespaces to use a machine-specific local mount. Use the
+default `.devcontainer/devcontainer.json`.
+
+## Local devcontainer on Windows or macOS
+
+### Prerequisites
+
+- VS Code Insiders.
+- The
+  [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers).
+- A Docker-compatible runtime:
+  - macOS: Docker Desktop.
+  - Windows: Docker Desktop with the WSL 2 backend, or the supported WSL
+    container workflow documented in
+    [the devcontainer workflow guide](.devcontainer/WORKFLOW.md).
+- Enough disk space and time for the first build.
+
+### Open the container
+
+1. Open the cloned repository in VS Code Insiders.
+2. Run **Dev Containers: Reopen in Container** from the Command Palette.
+3. Wait for the build and `.devcontainer/post-create.sh` to complete.
+4. Run the verification commands in **Verify the environment**.
+
+The active workflow intentionally uses the native Microsoft Dev Container
+base image instead of depending on a pre-published repository image in GHCR.
+The benefits are transparent Microsoft-maintained base contents, no private
+repository-image pull permission, and a configuration that contributors can
+rebuild from source. The trade-off is a longer first build and every full
+rebuild.
+
+The optional `.devcontainer/devcontainer-prebuilt.json` and workflow helpers
+remain development utilities; they are not the default participant path.
+
+## Native Windows or macOS setup
+
+Use the native path when you do not want Docker. Install:
+
+1. VS Code Insiders and the VS Code Agents application.
+2. Git and GitHub CLI.
+3. Node.js LTS (Node.js 20.19 or newer is required by the OpenSpec package).
+4. Python 3.14.
+5. The .NET 10 SDK; .NET 8 is also available in the devcontainer for exercises
+   that require it.
+6. Data API Builder:
+
+   ```bash
+   dotnet tool install --global Microsoft.DataApiBuilder
+   ```
+
+7. The
+   [Aspire CLI](https://learn.microsoft.com/dotnet/aspire/cli/install) for
+   Aspire-specific labs.
+8. GitHub Copilot CLI by following the
+   [GitHub Copilot CLI installation guide](https://docs.github.com/en/copilot/how-tos/copilot-cli/install-copilot-cli)
+   if you want the same command-line agent experience as the container.
+9. Optional external-service CLIs:
+   - Azure CLI for Azure MCP and Azure exercises.
+   - A compatible local Docker runtime for Aspire sidecars, SQL Server,
+     Testcontainers, Docker Scout, and container exercises.
+
+Verify the host:
+
+```bash
+git --version
+gh auth status
+node --version
+npm --version
+dotnet --version
+python3 --version        # macOS
+py -3.14 --version       # Windows
+dab --version
+aspire --version
+copilot --version
+openspec --version
+```
+
+On Windows PowerShell, create and activate the Python environment with:
+
+```powershell
+py -3.14 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r src/requirements-dev.txt
+```
+
+On macOS:
+
+```bash
+python3.14 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r src/requirements-dev.txt
+```
+
+## Make Lab 01 work
+
+Lab 01 is deliberately framework-free. It creates one self-contained HTML file;
+it does not require a backend, Node project, database, or OpenSpec change.
+
+1. Open the repository in the Agents application.
+2. Trust the workspace if prompted.
+3. Open [Lab 01](lab/01-beginner/01-copilot-foundations.md).
+4. Ask Copilot to create `src/hello-copilot.html` using the suggested prompt.
+5. Review the generated diff before accepting it.
+6. From the repository root, serve the static page:
+
+   ```bash
+   python3.14 -m http.server 8000 --directory src
+   ```
+
+   On a native Windows installation, use `py -3.14` instead of `python3.14`.
+
+7. Open `http://localhost:8000/hello-copilot.html`.
+   - In Codespaces, open port `8000` from the **Ports** tab if VS Code does not
+     offer to open it automatically.
+8. Confirm the heading, paragraph, and interactive button or link are visible.
+9. Stop the server with `Ctrl+C`.
+
+If port 8000 is already occupied, choose another port consistently in the
+command and browser URL.
+
+## Learning goals and roadmap
 
 - Build practical Copilot habits for everyday coding.
-- Move from prompt quality and pair-programming fundamentals to agentic workflows.
-- End with an automated issue-to-Copilot flow where tasks can be handled autonomously.
+- Move from prompt quality and pair programming to agentic workflows.
+- Use tests and review loops to validate generated changes.
+- End with an automated issue-to-Copilot flow where tasks can be handled
+  autonomously.
 
-## Workshop tracks
+Workshop tracks:
 
-- Beginner: prompt crafting, chat context, and safe code generation.
-- Intermediate: test-driven workflows, refactoring, and review loops.
-- Advanced: CI/CD + autonomous issue handling with Copilot-CLI coding agent.
+- **Beginner:** prompt crafting, chat context, and safe code generation.
+- **Intermediate:** tests, refactoring, review loops, and spec-driven work.
+- **Advanced:** CI/CD and autonomous issue handling.
 
-See the full roadmap in doc/workshop-roadmap.md.
+See the [workshop roadmap](doc/workshop-roadmap.md) and
+[participant setup guide](doc/setup.md).
 
-## Agentic SDLC Spec driven diagram
+## Agentic SDLC Spec-driven diagram
 
 ```mermaid
 flowchart LR
-    %% =======================
-    %% DARK THEME STYLING
-    %% =======================
     classDef stage fill:#1f2937,stroke:#60a5fa,color:#e5e7eb,stroke-width:1px;
     classDef role fill:#111827,stroke:#10b981,color:#d1fae5,stroke-width:1px;
     classDef gate fill:#111827,stroke:#f59e0b,color:#fde68a,stroke-dasharray: 5 5;
 
-    %% =======================
-    %% PRODUCT OWNER LANE
-    %% =======================
-    subgraph PO_LANE [👤 Product Owner]
+    subgraph PO_LANE [Product Owner]
         direction LR
         A["Idea<br/>idea issue"]
         B["Proposal<br/>proposal.md"]
     end
 
-    %% =======================
-    %% ARCHITECT LANE
-    %% =======================
-    subgraph SA_LANE [🏗️ Systems Architect]
+    subgraph SA_LANE [Systems Architect]
         direction LR
         C["Spec + Design<br/>design.md"]
     end
 
-    %% =======================
-    %% DEVELOPER LANE
-    %% =======================
-    subgraph DEV_LANE [👨‍💻 Developer]
+    subgraph DEV_LANE [Developer]
         direction LR
         D["Tasks<br/>tasks.md"]
         E["Code<br/>implementation"]
     end
 
-    %% =======================
-    %% QA LANE
-    %% =======================
-    subgraph QA_LANE [🧪 QA Engineer]
+    subgraph QA_LANE [QA Engineer]
         direction LR
         F["Tests<br/>test suite"]
     end
 
-    %% =======================
-    %% SECURITY LANE
-    %% =======================
-    subgraph SEC_LANE [🔐 Security Engineer]
+    subgraph SEC_LANE [Security Engineer]
         direction LR
         G["Security<br/>review"]
     end
 
-    %% =======================
-    %% REVIEW LANE
-    %% =======================
-    subgraph REV_LANE [👁️ Code Reviewer]
+    subgraph REV_LANE [Code Reviewer]
         direction LR
-        H[PR Review]
+        H["PR Review"]
     end
 
-    %% =======================
-    %% DEVOPS LANE
-    %% =======================
-    subgraph SRE_LANE [⚙️ DevOps / SRE]
+    subgraph SRE_LANE [DevOps / SRE]
         direction LR
-        I[Deploy]
+        I["Deploy"]
     end
 
-    %% =======================
-    %% OPERATIONS LANE
-    %% =======================
-    subgraph OPS_LANE [📊 Operations SRE]
+    subgraph OPS_LANE [Operations SRE]
         direction LR
         J["Operate<br/>monitoring / SLOs"]
         K["Archive<br/>change"]
     end
 
-    %% =======================
-    %% PIPELINE FLOW
-    %% =======================
     A --> B --> C --> D --> E --> CI --> F --> SEC_GATE --> G --> PR_GATE --> H --> CD --> I --> J --> K
+    CI{{"CI Pipeline<br/>build + test"}}
+    SEC_GATE{{"Security Gate<br/>scan + policy"}}
+    PR_GATE{{"PR Approval<br/>review gate"}}
+    CD{{"CD Pipeline<br/>release"}}
+    J -- "telemetry and insights" --> A
 
-    %% =======================
-    %% CI/CD GATES
-    %% =======================
-    CI{{CI Pipeline<br/>build + test}}
-    SEC_GATE{{Security Gate<br/>scan + policy}}
-    PR_GATE{{PR Approval<br/>review gate}}
-    CD{{CD Pipeline<br/>release}}
-
-    %% =======================
-    %% FEEDBACK LOOP
-    %% =======================
-    J -- telemetry & insights --> A
-
-    %% =======================
-    %% CLASS ASSIGNMENTS
-    %% =======================
     class A,B,C,D,E,F,G,H,I,J,K stage;
     class PO_LANE,SA_LANE,DEV_LANE,QA_LANE,SEC_LANE,REV_LANE,SRE_LANE,OPS_LANE role;
     class CI,SEC_GATE,PR_GATE,CD gate;
 ```
 
-## Agentic SDLC process diagram
-
 ![Agentic SDLC Process Roles and responsibilities](image/Agentic-SDLC.png)
 
-The workshop content is curated from:
+## OpenSpec CLI
 
-- [VS Code Agents application](https://code.visualstudio.com/docs/copilot/agents-app) — primary IDE for all workshop participants
-- [OpenSpec: a community-driven repository of best practices for prompt engineering and agent design.](https://github.com/Fission-AI/OpenSpec)
-- [Agentic DevOps in action: Reimagining every phase of the developer lifecycle](https://developer.microsoft.com/blog/reimagining-every-phase-of-the-developer-lifecycle)
-- [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli)
-- [awesome-copilot Learning Hub](https://awesome-copilot.github.com/learning-hub/)
-- [GitHub Awesome Copilot](https://github.com/github/awesome-copilot)
-- [VS Code .github build patterns](https://github.com/microsoft/vscode/tree/main/.github)
-- [VS Code Copilot Agents App](https://code.visualstudio.com/docs/copilot/agents-app)
-- [ECC: Everything Claude Code](https://github.com/affaan-m/ECC/tree/main)
-- [Impeccable](https://github.com/pbakaus/impeccable)
-- [OpenCode](https://github.com/anomalyco/opencode)
-- [SuperPowers](https://github.com/obra/superpowers)
+This repository is already initialized as an OpenSpec project. The OpenSpec
+CLI is the authoritative interface for inspecting, validating, applying, and
+archiving changes. Repository command skills are adapters that call the CLI
+workflow; they are not a replacement for it.
+
+Verify the existing checkout:
+
+```bash
+openspec --version
+openspec context --json
+openspec doctor
+openspec list --json
+```
+
+Do not run `openspec init` again in this repository unless you intentionally
+need to migrate or repair its OpenSpec schema. For a new project, install and
+initialize the CLI:
+
+```bash
+npm install -g @fission-ai/openspec@latest
+cd <new-repository>
+openspec init .
+openspec context --json
+```
+
+Use the CLI to inspect and apply a change:
+
+```bash
+openspec status --change <slug> --json
+openspec show --change <slug> --json
+openspec instructions proposal --change <slug> --json
+openspec instructions apply --change <slug> --json
+openspec validate
+openspec archive <slug> --json -y
+```
+
+Only archive after the repository's planning, test, security, review, and
+operational gates pass. The repository skills provide higher-level workflows:
+
+- `openspec-propose`
+- `openspec-apply-change`
+- `openspec-verify-change`
+- `openspec-sync-specs`
+- `openspec-archive-change`
+
+See [OpenSpec workflow
+instructions](.github/instructions/openspec-workflow.instructions.md) for the
+exact repository contract.
 
 ## Shared agentic assets
 
-Reusable Software Fabric workflows, templates, prompts, instructions, agents, and skills are maintained in [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared). This repo registers that clone as the OpenSpec store `agentic-shared`; use the store ID for OpenSpec operations against the shared repository. This consumer currently pins `v1.3.0`. To distribute a tagged release into this consumer, use `.github/workflows/agentic-shared-sync.yml`, which opens a review pull request.
+Reusable Software Fabric workflows, agents, instructions, and skills are
+maintained in [`ralphke/agentic-shared`](https://github.com/ralphke/agentic-shared).
+The local `.agentic-shared.yml` manifest currently pins release **`v1.4.0`**.
 
-Copilot discovers operational customizations from native repository locations: agents under `.github/agents`, instructions under `.github/instructions`, canonical skills under `.github/skills/<name>/SKILL.md`, and MCP integrations from `.mcp.json`. The numbered files matching `.github/prompts/0*-*.md` are chronological workshop history, not active prompt entry points; operational workflows are exposed as skills.
+This consumer repository owns workshop content, local specifications, OpenSpec
+changes, implementations, and repo-specific automation. The shared repository
+owns reusable cross-project assets. Keep the concerns separate:
 
-Workshop-specific labs, documentation, and environment setup remain owned locally in this repository.
+- Use this repository's default `openspec/` root for workshop and product work.
+- Use `--store agentic-shared` only when intentionally working on the shared
+  repository's OpenSpec content.
+- Do not hard-code the shared repository's checkout path into the manifest.
 
-## How the repos relate to each other
+Register a separate local checkout as an OpenSpec store when needed:
 
-This repository is intentionally split into two concerns:
-
-1. A local project repo: the repo you are actively working in, such as `Agentic-Coding` or your own fork of it.
-2. A shared asset repo: a reusable asset library such as `agentic-shared`.
-
-The local repo owns the project-specific work: workshop content, docs, lab exercises, OpenSpec change proposals, implementations, local specs, and repo-specific automation. The shared repo owns reusable patterns that can be adopted by many projects: generic agents, skills, workflow definitions, prompts, shared instructions, and template conventions.
-
-This distinction is configured in [.agentic-shared.yml](.agentic-shared.yml). It declares the upstream repository, registered OpenSpec store ID, pinned release, and asset ownership modes. It deliberately does not store a machine-specific absolute path; OpenSpec resolves the registered ID on each developer's machine. In practice:
-
-- `Agentic-Coding` is the working repo for active SDLC work.
-- `agentic-shared` is the registered OpenSpec store for the canonical shared repository and its OpenSpec changes.
-- Local files remain under the repository you are developing; shared files are synced or imported rather than treated as the main implementation home.
-- Consumer feature work uses this repo's OpenSpec root by default; explicitly select `--store agentic-shared` only when working on shared specifications or changes.
-
-The OpenSpec store ID and asset synchronization serve different purposes. `openspec ... --store agentic-shared` selects the canonical shared OpenSpec root; the synchronization script consumes tagged repository revisions and reconciles managed files into this consumer. Do not use the shared store for this repo's product or workshop feature work.
-
-### Inspect or update the shared store
-
-The registered store path is machine-local and must be resolved through OpenSpec rather than hard-coded:
-
-```powershell
-openspec store list --json
+```bash
+cd ..
+git clone https://github.com/ralphke/agentic-shared.git agentic-shared
+cd Agentic-Coding
+openspec store register "../agentic-shared" --id agentic-shared --yes
 openspec store doctor agentic-shared
 openspec context --json --store agentic-shared
 openspec list --json --store agentic-shared
 ```
 
-To synchronize a tagged revision locally, run the consumer sync script. It resolves `source.store_id` from the manifest, verifies that the store's Git origin matches `source.repository`, checks out the pinned and target tags in temporary directories, and applies the existing three-way conflict checks:
+Validate and synchronize a tagged release locally:
 
-```powershell
+```bash
 python .github/scripts/validate_agentic_shared_manifest.py .agentic-shared.yml
-python .github/scripts/sync_agentic_shared.py --target-version v1.3.0
+python .github/scripts/sync_agentic_shared.py --target-version v1.4.0
 ```
 
-The normal sync uses Git-style three-way merging. Independent downstream and
-upstream changes are combined automatically; only overlapping changes that Git
-cannot merge safely are reported as conflicts.
+Use `--force` only to replace unresolved, manifest-managed consumer files. It
+does not bypass `protected_paths`, and the resulting diff must still be
+reviewed:
 
-To deliberately replace unresolved or conflicting managed consumer files with
-the target release, use `--force`:
-
-```powershell
-python .github/scripts/sync_agentic_shared.py --target-version v1.4.0 --force
+```bash
+python .github/scripts/sync_agentic_shared.py --target-version <tag> --force
 ```
 
-`--force` is restricted to manifest-managed asset paths and does not bypass
-`protected_paths`. Review the resulting diff before committing or opening a PR.
+For a reviewed GitHub-hosted update, dispatch
+`.github/workflows/agentic-shared-sync.yml`; it creates a pull request rather
+than pushing directly to `main`.
 
-For a reviewed GitHub-hosted update, dispatch `.github/workflows/agentic-shared-sync.yml` with the target release tag. The workflow checks out the same pinned and target tags and opens a pull request; it does not depend on a developer's local store registration.
+Copilot discovers repository customizations from:
 
-### Recommended fork/clone pattern for new users
+- Agents: `.github/agents/`
+- Instructions: `.github/instructions/`
+- Skills: `.github/skills/<name>/SKILL.md`
+- MCP integrations: `.mcp.json`
+- Workflows: `.github/workflows/`
 
-If you want to start from this repo and create your own project:
+The numbered Markdown files in `.github/prompts/` are chronological workshop
+history, not active slash commands. Operational workflows are exposed through
+skills and the OpenSpec CLI.
 
-```powershell
-# 1) Clone the local project repo you want to build from
-# Example: your own fork of Agentic-Coding
-cd D:\repos
-git clone https://github.com/<your-user>/Agentic-Coding.git
-cd Agentic-Coding
+## Add an MCP server for security tasks
 
-# 2) Keep the shared asset repo separate
-cd ..
-git clone https://github.com/ralphke/agentic-shared.git
+The repository's portable MCP configuration is `.mcp.json`. The security
+agent is defined in
+`.github/agents/security-engineer.agent.md` and currently uses the GitHub and
+OpenSpec tools in its explicit `tools` allow-list. Add a security server in two
+places: register it and grant only its required tools to the agent.
 
-# 3) Initialize OpenSpec in the project repo, not in the shared repo
-cd ..\Agentic-Coding
-openspec init .
-openspec context --json
+### 1. Register the server
+
+Add the server under `mcpServers` in `.mcp.json`. Pin an npm package version
+where possible and pass credentials through environment variables rather than
+literal values. A local/stdio example:
+
+```json
+{
+  "mcpServers": {
+    "security-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@your-org/security-mcp@1.2.3"
+      ],
+      "env": {
+        "SECURITY_MCP_TOKEN": "${env:SECURITY_MCP_TOKEN}"
+      }
+    }
+  }
+}
 ```
 
-The important rule is: the project repo is the one where you create ideas, proposals, change specs, and implementation tasks through `/openspec:` commands. The shared repo remains the upstream source for reusable, cross-project patterns.
+For an HTTP server, register its URL and use the authentication mechanism
+supported by that server. Prefer OAuth, a short-lived token, or a
+prompted/secret-backed variable. Never copy a long-lived bearer token into
+`.mcp.json`.
 
-If you want your own custom shared asset library, update `source.repository` and register its clone locally with an OpenSpec store ID, then set `source.store_id` accordingly. Keep this project repo as the default OpenSpec root for product work.
+### 2. Grant least-privilege access to the security agent
 
-## Initializing a new repo with OpenSpec and associating it with a shared store
+Update the `tools` front matter in
+`.github/agents/security-engineer.agent.md`:
 
-Use the repo-local OpenSpec root for the project you are actively working in. Register the separate shared repository as a store when you need to inspect or maintain its OpenSpec content; the store ID does not change the default project root.
-
-For this environment, the supported command is:
-
-```powershell
-cd "D:\path\to\your\new-repo"
-openspec init .
-openspec context --json
+```yaml
+tools:
+  - execute
+  - read
+  - search
+  - web
+  - todo
+  - github/*
+  - openspec-filesystem/*
+  - security-mcp/*
 ```
 
-This initializes the repo at the current folder and creates the local OpenSpec configuration under `openspec/` (or the configured path for that repo).
+Replace `security-mcp/*` with the server's exact tool prefix or, preferably,
+its individual approved tools. The provider name must match the server name in
+`.mcp.json`. Do not use unrestricted access unless the server is intentionally
+designed for it and the security risk has been reviewed.
 
-The command, `openspec context --json` should return the active repo root and confirm the working directory is recognized as an OpenSpec project.
+### 3. Reload and verify
 
-To register and select a shared store:
+1. Reopen VS Code, run **Developer: Reload Window**, or restart the Codespace
+   and Copilot session after changing `.mcp.json`.
+2. Run **MCP: List Servers** from the Command Palette and confirm the server
+   reaches a running or connected state.
+3. Open **View → Output** and select the MCP log when startup or authentication
+   fails. Confirm the failure is not a missing environment variable.
+4. Start a new chat, select the **Security Engineer Agent**, and open the tool
+   picker. The expected security tools should appear.
+5. Run a read-only smoke test first, for example a vulnerability-database
+   lookup or server metadata request. Confirm that writes, deployments, and
+   destructive commands are not exposed unless explicitly required.
+6. Invoke the security-review skill on a small test change and verify the
+   resulting evidence identifies the MCP server and the exact tool calls used.
 
-```powershell
-openspec store register "D:\path\to\agentic-shared" --id agentic-shared --yes
-openspec store list --json
-openspec context --json --store agentic-shared
-```
-
-Use `openspec context --json` without `--store` to confirm that the consumer project remains the default root. Use `--store agentic-shared` only for shared-repository OpenSpec work.
+A configured entry is not proof of activation. Successful server discovery,
+authenticated startup, visible agent tools, and one representative tool call
+are all required before relying on the integration as a security gate.
 
 ## Repository layout
 
-- .github/prompts: prompt history recorded in operation order.
-- .github/workflows: CI and Copilot automation workflows.
-- doc: workshop guides, facilitator notes, and participant setup instructions (doc/setup.md).
-- lab: participant exercises by level.
-- src: optional source exercises.
-- spec: optional specification for exercises.
-- test: optional validation tests for exercises.
+- `README.md`: first-time setup and high-level workflow.
+- `doc/`: workshop guides, facilitator notes, and environment documentation.
+- `lab/`: participant exercises by level.
+- `src/`: workshop source exercises and Python development dependencies.
+- `openspec/`: source-of-truth specifications and in-flight changes.
+- `.devcontainer/`: active container configuration and build helpers.
+- `.github/agents/`: Software Fabric personas.
+- `.github/skills/`: operational workflows.
+- `.github/instructions/`: repository-wide and path-specific Copilot guidance.
+- `.github/workflows/`: CI, security, OpenSpec, and task-routing automation.
+- `tests/`: repository and devcontainer validation.
 
-## Devcontainer vs manual Docker build
+## References
 
-This repository uses `.devcontainer/devcontainer.json` as the primary VS Code container definition for the normal workshop workflow.
-
-- `devcontainer.json` is the source of truth for VS Code devcontainer opens and rebuilds.
-- `.devcontainer/docker-compose.yml` and `.devcontainer/Dockerfile.security-fix` are optional manual build helpers.
-- `.devcontainer/docker-compose.local.yml` is an optional local override for developer testing.
-- The manual compose path is aligned to the same base image as `devcontainer.json`; keep `Dockerfile.security-fix` updated if the devcontainer base image changes.
-- Prefer the `devcontainer.json` path unless you explicitly need a custom Docker compose build.
-
-Local testing workflow with the override file:
-
-```powershell
-docker compose -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.local.yml build --no-cache
-docker compose -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.local.yml up -d
-```
-
-This keeps the default compose file pinned to the hardened GHCR image while still allowing quick local rebuilds.
-
-### Push local image to GHCR
-
-Use the PowerShell helper script to push `agentic-coding-image:latest` to GitHub Container Registry:
-
-```powershell
-./scripts/push-ghcr-image.ps1 -Owner <github-owner>
-```
-
-Authentication options:
-
-- Set `GITHUB_TOKEN` in your shell (recommended for CI and local automation).
-- Or sign in with GitHub CLI (`gh auth login`), then the script can use `gh auth token`.
-
-Required token scopes for GHCR push:
-
-- `write:packages`
-- `read:packages`
-
-Explicit token usage example (PowerShell):
-
-```powershell
-$env:GITHUB_TOKEN = "<github_pat_with_write_packages>"
-./scripts/push-ghcr-image.ps1 -Owner <github-owner>
-```
-
-Optional SHA tag push:
-
-```powershell
-./scripts/push-ghcr-image.ps1 -Owner <github-owner> -PushShaTag -ShaTag <commit-sha>
-```
-
-## Prerequisites
-
-> **Primary IDE for this workshop:** [VS Code Agents application](https://code.visualstudio.com/docs/copilot/agents-app) (bundled with VS Code Insiders). See **doc/setup.md** for installation and sign-in instructions before starting any lab.
-
-- VS Code Insiders installed with the Agents application open
-- GitHub account with an active Copilot subscription
-- This repository cloned and trusted in the Agents app
-
-## Quick start
-
-1. Create issues from the Copilot task issue template.
-2. Add the label copilot-task.
-3. The workflow auto-routes the issue and asks Copilot to start work.
-4. CI runs on pull requests so proposed changes are validated.
-
-## Notes
-
-- Automation requires GitHub Copilot-CLI coding agent availability on the repository/org.
-- If Copilot-CLI cannot be auto-assigned in your org, the workflow leaves guidance comments so a maintainer can continue manually.
+- [VS Code Agents application](https://code.visualstudio.com/docs/copilot/agents-app)
+- [Set up GitHub Copilot in VS Code](https://code.visualstudio.com/docs/copilot/setup)
+- [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli)
+- [OpenSpec](https://github.com/Fission-AI/OpenSpec)
+- [Dev Containers](https://containers.dev/)
+- [GitHub Codespaces](https://docs.github.com/codespaces)
+- [Awesome Copilot Learning Hub](https://awesome-copilot.github.com/learning-hub/)
