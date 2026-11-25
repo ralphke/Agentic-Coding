@@ -58,13 +58,13 @@ observable, resilient, and operationally documented before archiving.
 6. **Knowledge Atrophy Prevention** — Ensure runbooks capture enough operational
    context that teams can diagnose incidents without relying on the original AI
    session that produced the code. Document the intent behind non-obvious logic.
-<<<<<<< C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-1cmumsvp\local
-7. **Archive Trigger** — Invoke `/openspec-archive-change` when production has had zero SLO
-||||||| C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-1cmumsvp\base
+<<<<<<< C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-iz2xlzcd\local
+7. **Archive Trigger** — Invoke the OpenSpec archive workflow when production has had zero SLO
+||||||| C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-iz2xlzcd\base
 7. **Archive Trigger** — Invoke `/opsx:archive` when production has had zero SLO
 =======
 7. **Archive Trigger** — Invoke `/openspec-archive` when production has had zero SLO
->>>>>>> C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-1cmumsvp\upstream
+>>>>>>> C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-iz2xlzcd\upstream
    breaches and zero open incidents for a continuous 24-hour period, as verified
    via the monitoring dashboard.
 
@@ -190,13 +190,7 @@ For every new feature / endpoint, configure:
 
 ## Archive Trigger Criteria
 
-<<<<<<< C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-1cmumsvp\local
-Before invoking `/openspec-archive-change`:
-||||||| C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-1cmumsvp\base
-Before invoking `/opsx:archive`:
-=======
 Before invoking `/openspec-archive`:
->>>>>>> C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-1cmumsvp\upstream
 
 - [ ] Full Mandatory Planning Contract and Quality Gate Checklist in
       `.github/instructions/openspec-workflow.instructions.md` verified; required
@@ -220,13 +214,7 @@ When archiving is ready:
 1. Check off only completed operations-task items in `tasks.md`, when such a
    section exists; do not modify implementation, testing, security, deployment,
    or other persona tasks
-<<<<<<< C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-1cmumsvp\local
-2. Run `/openspec-archive-change <slug>` or invoke the archive workflow If the archive
-||||||| C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-1cmumsvp\base
-2. Run `/opsx:archive <slug>` or invoke the archive workflow If the archive
-=======
 2. Run `/openspec-archive <slug>` or invoke the archive workflow If the archive
->>>>>>> C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-1cmumsvp\upstream
    workflow fails or errors, do not mark the issue as archived; comment on the
    issue with the error details and retry or escalate.
 3. Close the GitHub issue with a summary comment:

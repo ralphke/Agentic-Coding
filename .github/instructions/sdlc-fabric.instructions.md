@@ -58,19 +58,9 @@ review.
 ## To Work on an Existing Change
 
 ```text
-<<<<<<< C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-c6hmr0gu\local
-/openspec-apply-change <change-slug>    # Implement tasks
-/openspec-sync-specs <change-slug>     # Preview spec merge
-/openspec-archive-change <change-slug>  # Complete the change
-||||||| C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-c6hmr0gu\base
-/opsx:apply <change-slug>    # Implement tasks
-/opsx:sync <change-slug>     # Preview spec merge
-/opsx:archive <change-slug>  # Complete the change
-=======
 /openspec-apply <change-slug>    # Implement tasks
 /openspec-sync <change-slug>     # Preview spec merge
 /openspec-archive <change-slug>  # Complete the change
->>>>>>> C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-c6hmr0gu\upstream
 ```
 
 ## Spec Location Convention

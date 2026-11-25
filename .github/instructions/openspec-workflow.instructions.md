@@ -50,9 +50,26 @@ version, treat this the same as Stop Condition #2.
 | ----------------------- | ------------------------------------------------------ |
 | `/openspec-propose <slug>`        | Create a new change folder with all planning artifacts |
 | `/openspec-explore [topic]`       | Investigate and think through ideas before proposing   |
-| `/openspec-apply-change [slug]`   | Implement tasks from `tasks.md`                        |
-| `/openspec-sync-specs [slug]`     | Preview-merge delta specs into main specs              |
-| `/openspec-archive-change [slug]` | Merge deltas into specs/ and move change to archive/   |
+| `/openspec-apply-change [slug]`   | Plugin adapter; resolves tasks and runs apply instructions |
+| `openspec instructions apply --change "<slug>" --json` | Implement tasks from `tasks.md` |
+| `openspec instructions specs --change "<slug>" --json` | Preview or produce delta specs |
+| `/openspec-archive-change [slug]` | Plugin adapter; verifies gates and delegates final archive to the CLI |
+| `openspec archive "<slug>" --json -y` | Merge deltas into specs/ and move change to archive/ |
+
+Plugin commands and skills are workflow adapters, not alternate implementations.
+Use the CLI for authoritative state and mutations:
+
+- `openspec status`, `openspec show`, `openspec validate`, and
+  `openspec instructions` provide change context.
+- `openspec instructions apply --change "<slug>" --json` provides the apply
+  task instructions used by the apply skill.
+- `openspec instructions specs --change "<slug>" --json` provides spec-delta
+  instructions used by proposal, sync, verify, and archive workflows.
+- `openspec archive "<slug>" --json -y` performs the final spec merge and archive
+  move only after the workflow's mandatory gates pass.
+
+Do not add or advertise an `openspec instructions archive` command: this CLI
+version does not support it.
 
 ## File Locations
 
@@ -217,5 +234,5 @@ coverage metric), not inferred from missing evidence or a confirmation.
 Local artifact validation does not certify external quality gates.
 
 If any Quality Gate Checklist item is unmet, do not run
-`/openspec-archive-change` (see Stop Conditions #6). User confirmation cannot
+`openspec archive "<slug>" --json -y` (see Stop Conditions #6). User confirmation cannot
 override mandatory gates.

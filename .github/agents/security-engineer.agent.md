@@ -273,13 +273,6 @@ When security review is complete:
    re-review after remediation, only re-check items previously flagged as
    blocking; do not require a full re-scan unless new dependencies or files were
    changed.
-<<<<<<< C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-xt21k7jy\local
-5. Comment: "@code-reviewer-agent — Security passed. Review can proceed." OR
-   "@developer-agent — Security blocked. N findings require remediation."
-||||||| C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-xt21k7jy\base
-5. Comment: "@code-reviewer-agent — Security passed. Review can proceed." OR
-   "@developer-agent — Security blocked. N findings require remediation."
-=======
 5. If the only override is a complete devcontainer warning: record
    `security:devcontainer-warning` without `security:passed` or
    `stage:review`; create or link the mandatory remediation follow-up and keep
@@ -288,4 +281,3 @@ When security review is complete:
    "@developer-agent — Security blocked. N findings require remediation." OR
    "@developer-agent — Devcontainer validation has an expiring warning and
    requires follow-up."
->>>>>>> C:\Users\RALPHK~1\AppData\Local\Temp\agentic-shared-merge-xt21k7jy\upstream

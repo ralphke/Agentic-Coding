@@ -50,32 +50,13 @@ In both branches, never create the root as a side effect: do not run `openspec i
 
    Always announce: "Using change: <name>" and how to override (e.g., `/openspec-archive-change <other>`).
 
-   **Load current archive inputs before the existing archive checks:**
+   **Load current archive context before the existing archive checks:**
 
-   After resolving the selected change and planning root, run:
-   ```bash
-   openspec instructions archive --change "<name>" --json
-   ```
-   Keep the same selected-root flags on this command. This lookup is advisory and
-   optional: it only supplies extra prompt inputs, so it must never block archiving.
-   If it exits non-zero or returns invalid JSON — for example on an older CLI that
-   does not support this command yet — continue the archive workflow with no
-   context and no operation guidance. Do not report an error and do not stop.
-
-   A successful response may omit both optional fields. Treat `context` as a
-   required prompt-level input: read and consider it, and apply relevant project
-   facts, conventions, and constraints. Treat `operationGuidance` as optional
-   additive advice: read and consider every entry, and follow entries that are
-   applicable and compatible with the built-in archive workflow.
-
-   Keep both fields separate from built-in steps, explicit user choices, resolved
-   paths, CLI checks, and command contracts. If context conflicts with one of those
-   controlling inputs, report the conflict and preserve the controlling value. If
-   guidance is inapplicable or conflicts with a controlling input, do not follow it
-   and explain why. Do not infer replacement paths, skipped prompts, or flags from
-   either field, and do not copy their text verbatim into specs, change artifacts,
-   or archive summaries unless the user separately asks for it. These are
-   prompt-level behavior contracts, not enforceable checks.
+   Use `openspec status --change "<name>" --json` and
+   `openspec show "<name>" --json` for authoritative change state. Do not call
+   `openspec instructions archive`; this CLI version does not support that
+   artifact lookup. For project constraints, use the selected root's instructions
+   and context rather than inventing a replacement archive lookup.
 
 2. **Check artifact completion status**
 
@@ -188,20 +169,16 @@ In both branches, never create the root as a side effect: do not run `openspec i
    evidence or artifacts changed. On failure keep the change active and report
    any main-spec writes already made; do not claim rollback.
 
-   Create an `archive` directory under `planningHome.changesDir` if it doesn't exist:
-   ```bash
-   mkdir -p "<planningHome.changesDir>/archive"
-   ```
-
-   Generate the target name: use the change name as-is when it already starts with a `YYYY-MM-DD-` prefix; otherwise prepend the current date as `YYYY-MM-DD-<change-name>`. Never stack a second date (same rule as `openspec archive`).
-
-   **Check if target already exists:**
-   - If yes: Fail with error, suggest renaming existing archive or using different date
-   - If no: Move `changeRoot` to the archive directory
+   Run the authoritative CLI archive operation:
 
    ```bash
-   mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
+   openspec archive "<name>" --json -y
    ```
+
+   Keep the same selected-root flags. Do not separately move `changeRoot`; let
+   the CLI merge specs and perform the archive move. If the CLI reports a
+   collision, validation failure, spec blocker, or other error, keep the change
+   active and report the failure.
 
 6. **Display summary**
 

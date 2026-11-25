@@ -55,30 +55,11 @@ In both branches, never create the root as a side effect: do not run `openspec i
 
    **IMPORTANT**: Do NOT auto-select. Always let the user choose.
 
-   **Load current archive inputs once for the selected root before batch validation:**
+   **Load current batch context before batch validation:**
 
-   Choose one selected change from this root and run
-   `openspec instructions archive --change "<selected-change>" --json` with the
-   same selected-root flags. This lookup is advisory and optional: it only supplies
-   extra prompt inputs, so it must never block the batch. If it fails or returns
-   invalid JSON — for example on an older CLI that does not support this command
-   yet — continue the batch with no context and no operation guidance. Do not
-   report an error and do not stop.
-
-   A valid response may omit `context` and `operationGuidance`. Treat
-   `context` as a required prompt-level input across the batch: read and consider
-   it, and apply relevant project facts, conventions, and constraints. Treat
-   `operationGuidance` as optional additive advice: read and consider every
-   entry, and follow entries that are applicable and compatible with the built-in
-   batch workflow.
-
-   Keep both fields separate from conflict analysis, explicit user choices,
-   resolved paths, CLI checks, and command contracts. If context conflicts with one
-   of those controlling inputs, report the conflict and preserve the controlling
-   value. If guidance is inapplicable or conflicts with a controlling input, do not
-   follow it and explain why. Do not infer skipped prompts, replacement paths, or
-   flags from either field, and do not copy their text verbatim into specs, changes,
-   or summaries. These are prompt-level behavior contracts, not enforceable checks.
+   Use `openspec list --json`, `openspec status`, `openspec show`, and
+   `openspec validate` for authoritative state. Do not call
+   `openspec instructions archive`; this CLI does not support that artifact lookup.
 
 3. **Batch validation - gather status for all selected changes**
 
@@ -252,19 +233,16 @@ In both branches, never create the root as a side effect: do not run `openspec i
 
    c. **Perform the archive**:
 
-      Target name: use the `<target-name>` recorded for this change in step 3d, unchanged. Never recompute it here: a batch that runs past midnight would check one date in step 3 and move to another.
-
-      **Check if target already exists:**
-      - Check again immediately before the move, even though step 3 already checked: the target can appear mid-batch
-      - If yes: record this change as Failed with `Archive directory already exists`, leave `changeRoot` where it is, report any main specs step 8a already synced for it, and continue with the remaining changes
-      - If no: move `changeRoot` to the archive directory
+      Run the authoritative CLI archive operation:
 
       ```bash
-      mkdir -p "<planningHome.changesDir>/archive"
-      mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
+      openspec archive "<name>" --json -y
       ```
 
-      **Confirm the move did not nest:** `mv` exits 0 even when the target appeared after the check, moving the change *inside* it. If `<planningHome.changesDir>/archive/<target-name>/<change-directory-name>` now exists (the last path segment of `changeRoot`), move that directory back to `changeRoot` and record this change as Failed with `Archive directory already exists`. Never report it as archived.
+      Keep the same selected-root flags. Do not manually move `changeRoot`. If the
+      CLI reports a collision, validation failure, spec blocker, or another error,
+      record the change as Failed and continue only with independent eligible
+      changes.
 
    d. **Track outcome** for each change:
       - Success: archived successfully
